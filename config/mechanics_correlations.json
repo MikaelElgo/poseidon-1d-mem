@@ -1,0 +1,92 @@
+{
+  "accessed": "2026-09-07",
+  "candidate_decisions": [
+    {
+      "id": "horsrud_2001",
+      "implemented": false,
+      "reason": "material applicability and Vp input unavailable in delivered elastic profiles; originating full text not inspected"
+    },
+    {
+      "id": "bradford_1998",
+      "implemented": false,
+      "reason": "originating equation text not inspected; a secondary table is not used to activate a field method"
+    },
+    {
+      "id": "universal_dynamic_static_ratio",
+      "implemented": false,
+      "reason": "no universal conversion justified"
+    },
+    {
+      "id": "gr_to_material_class",
+      "implemented": false,
+      "reason": "GR proxy does not establish named lithology"
+    }
+  ],
+  "claim": "No new direct measurements. No calibrated static/strength quantity. No stress or WBS calculation.",
+  "isotropic": {
+    "formulae": [
+      "G_GPa = E_GPa / (2*(1+nu))",
+      "K_GPa = E_GPa / (3*(1-2*nu))"
+    ],
+    "source": "isotropic linear elasticity identities; same constitutive family as Increment 9",
+    "url": "https://ocw.mit.edu/courses/22-314j-structural-mechanics-in-nuclear-power-technology-fall-2006/137e6469e37e9d347b7b3b69292da2f3_l4_2.pdf"
+  },
+  "mohr_coulomb": {
+    "constraint": "tensile_ratio <= (1-sin(phi))/(1+sin(phi)); angles passed in degrees and converted explicitly",
+    "formulae": [
+      "c_MPa = UCS_MPa*(1-sin(phi))/(2*cos(phi))",
+      "mu = tan(phi)",
+      "T0_MPa = tensile_ratio * UCS_MPa"
+    ],
+    "source": "cohesion algebra from Mohr-Coulomb; tensile ratio is a project assumption, not a correlation",
+    "url": "https://doi.org/10.1007/s00603-012-0281-7"
+  },
+  "parameter_experiment": {
+    "basis": "project-selected one-at-a-time numerical experiments; not literature bounds, probabilities or estimates of Poseidon parameters",
+    "blocked_use": "no operational use; no calibrated input; no implication that case extrema bound nature",
+    "nu": [
+      0.2,
+      0.25,
+      0.3
+    ],
+    "phi_deg": [
+      20.0,
+      30.0,
+      40.0
+    ],
+    "reference": "nu=.25, phi=30 degrees, T0/UCS=.05; comparison anchor only",
+    "tensile_ratio": [
+      0.0,
+      0.05,
+      0.1
+    ]
+  },
+  "schema_version": "10.0.0",
+  "static": {
+    "doi": "10.46717/igj.57.2B.5ms-2024-8-15",
+    "field_eligible": false,
+    "formula": "Estatic_GPa = 0.3655 * Edyn_GPa ** 1.0959",
+    "id": "mahdi_alrazzaq_2024_eq8",
+    "input_span_GPa": [
+      17.9,
+      43.45
+    ],
+    "population": "Rumaila Nahr Umr sandstone; 17 core measurements; 663 log points",
+    "reason": "Poseidon material identity, conditions and calibration transfer unproven",
+    "review": "Exact Eq. 8 and Table 2 inspected. Surrounding paper contains editorial inconsistencies; no claim of independent source validation.",
+    "source": "Mahdi and Alrazzaq (2024), Iraqi Geological Journal 57(2B), 77-88, Eq. 8 p.81; Table 2 p.79",
+    "span_meaning": "reported source predictor range, not transferable validity",
+    "url": "https://igj-iraq.org/igj/index.php/igj/article/download/2423/2031/27811"
+  },
+  "strength": {
+    "doi": "10.1016/j.petrol.2006.01.003",
+    "field_eligible": false,
+    "formula": "UCS_MPa = 46.2 * exp(0.027 * Estatic_GPa)",
+    "id": "chang_2006_table1_eq8",
+    "numeric_support": "limited here to the output span of the selected static experiment; not an empirical validity domain",
+    "population": "sandstone relation evaluated in paper; originating region/reference not identified in Table 1",
+    "reason": "unproven material, static transfer, saturation and originating calibration",
+    "source": "Chang, Zoback and Khaksar (2006), JPSE 51, 223-237, Table 1 Eq. 8 p.227; static E discussion on same page",
+    "url": "https://pangea.stanford.edu/departments/geophysics/dropbox/STRESS/publications/MDZ%20PDF's/2006/2006_Empirical_relations_between_rock_strenght.pdf"
+  }
+}

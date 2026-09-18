@@ -1,0 +1,12 @@
+{
+  "schema_version": "9.0.0",
+  "bounds": {
+    "vp_min_m_s": 1000.0,
+    "vp_max_m_s": 8000.0,
+    "vs_min_m_s": 300.0,
+    "vs_max_m_s": 5000.0,
+    "rhob_min_kg_m3": 1000.0,
+    "rhob_max_kg_m3": 3500.0,
+    "ratio_max": 4.0
+  }
+}

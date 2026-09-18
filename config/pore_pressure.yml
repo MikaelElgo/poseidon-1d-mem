@@ -1,0 +1,53 @@
+# Poseidon 2 1D MEM — Increment 8
+# Pore-pressure and effective-stress screening policy.
+# Tier C — Screening-Level / Uncalibrated Educational.
+#
+# All values below are explicit screening assumptions. They are not measured
+# formation pressures and are not calibration data. No NCT, Eaton, Bowers,
+# equivalent-depth, drilling-exponent, or other overpressure transform is
+# enabled by this file.
+
+schema_version: "8.0.1"
+increment: 8
+assurance_tier: "Tier C - Screening-Level / Uncalibrated Educational"
+
+locked_inputs:
+  vertical_stress_profile: "outputs/07_density_overburden/vertical_stress_profile.csv"
+  shallow_column_scenarios: "outputs/07_density_overburden/shallow_column_scenarios.csv"
+  overburden_eligibility: "outputs/07_density_overburden/overburden_eligibility_summary.csv"
+  method_eligibility: "outputs/06_petrophysics_eligibility/method_eligibility_summary.csv"
+  thickness_sensitivity: "outputs/06_petrophysics_eligibility/thickness_sensitivity_summary.csv"
+  petrophysics_manifest: "outputs/06_petrophysics_eligibility/petrophysics_eligibility_manifest.json"
+  sonic_checkshot_drift: "outputs/04_checkshot_time_depth/sonic_checkshot_drift_summary.csv"
+
+hydrostatic_reference:
+  gravity_m_s2: 9.80665
+  fluid_density_low_kg_m3: 1020.0
+  fluid_density_base_kg_m3: 1025.0
+  fluid_density_high_kg_m3: 1030.0
+  pressure_datum: "mean_sea_level_gauge_zero"
+  depth_coordinate: "tvdss_m_positive_downward"
+
+effective_stress:
+  equation: "sigma_v_effective_pa = sigma_v_total_pa - biot_alpha * pore_pressure_pa"
+  biot_alpha_scenarios: [0.8, 1.0]
+  profile_biot_alpha: 1.0
+  profile_fluid_density_kg_m3: 1025.0
+  negative_values_policy: "retain_and_flag_never_clip"
+
+pressure_calibration:
+  required_types: ["RFT", "MDT", "DST", "FIT", "LOT", "XLOT", "DFIT"]
+  available_file_count: 0
+  cross_well_transfer_allowed: false
+
+prediction_policy:
+  nct_fit_enabled: false
+  overpressure_transform_enabled: false
+  pressure_calibration_required: true
+  independent_normal_interval_evidence_required: true
+  sonic_checkshot_drift_correction_allowed: false
+  extrapolation_allowed: false
+
+reporting:
+  output_directory: "outputs/08_pore_pressure_effective_stress"
+  increment_9_started: false

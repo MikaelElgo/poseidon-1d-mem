@@ -1,0 +1,51 @@
+{
+  "schema_version": "10.0.0",
+  "mode": "conditional_analogue_only",
+  "static_method": "mahdi_alrazzaq_2024_eq8",
+  "strength_method": "chang_2006_table1_eq8",
+  "material_hypothesis": "sandstone_analogue_not_interpreted_lithology",
+  "cases": [
+    {
+      "case_id": "reference_experiment",
+      "nu_static": 0.25,
+      "phi_deg": 30.0,
+      "tensile_ratio": 0.05
+    },
+    {
+      "case_id": "nu_020",
+      "nu_static": 0.2,
+      "phi_deg": 30.0,
+      "tensile_ratio": 0.05
+    },
+    {
+      "case_id": "nu_030",
+      "nu_static": 0.3,
+      "phi_deg": 30.0,
+      "tensile_ratio": 0.05
+    },
+    {
+      "case_id": "phi_020",
+      "nu_static": 0.25,
+      "phi_deg": 20.0,
+      "tensile_ratio": 0.05
+    },
+    {
+      "case_id": "phi_040",
+      "nu_static": 0.25,
+      "phi_deg": 40.0,
+      "tensile_ratio": 0.05
+    },
+    {
+      "case_id": "tensile_zero",
+      "nu_static": 0.25,
+      "phi_deg": 30.0,
+      "tensile_ratio": 0.0
+    },
+    {
+      "case_id": "tensile_010",
+      "nu_static": 0.25,
+      "phi_deg": 30.0,
+      "tensile_ratio": 0.1
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "12.0.0",
+  "boundary": "sealed_wall_fixed_formation_pressure_alpha_1",
+  "orientation_basis": "hypothetical_relative_to_SHmax_no_geographic_azimuth",
+  "pressure_datum": "gauge_MSL_equivalent_column_using_TVDSS",
+  "angular_tolerance_MPa": 0.02,
+  "initial_step_deg": 2.0,
+  "minimum_step_deg": 0.25,
+  "orientations": [
+    {"id": "vertical", "inclination_deg": 0, "relative_azimuth_deg": 0},
+    {"id": "i30_a0", "inclination_deg": 30, "relative_azimuth_deg": 0},
+    {"id": "i30_a45", "inclination_deg": 30, "relative_azimuth_deg": 45},
+    {"id": "i30_a90", "inclination_deg": 30, "relative_azimuth_deg": 90},
+    {"id": "i60_a0", "inclination_deg": 60, "relative_azimuth_deg": 0},
+    {"id": "i60_a45", "inclination_deg": 60, "relative_azimuth_deg": 45},
+    {"id": "i60_a90", "inclination_deg": 60, "relative_azimuth_deg": 90}
+  ]
+}

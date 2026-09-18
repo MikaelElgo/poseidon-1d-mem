@@ -1,0 +1,29 @@
+{
+  "sources": [
+    {
+      "title": "Merxhani (2016), An introduction to linear poroelasticity",
+      "url": "https://arxiv.org/pdf/1607.04274",
+      "location": "Sections 2-4, isotropic constitutive law and Biot effective stress",
+      "use": "Algebraically eliminate vertical strain; compression-positive convention explicitly adopted here."
+    },
+    {
+      "title": "Miranda et al. (2023), Estimating theoretical stress regime for engineered geothermal energy systems in an arctic community",
+      "url": "https://comptes-rendus.academie-sciences.fr/geoscience/articles/10.5802/crgeos.193/",
+      "location": "Section 3.2, Equations 5 and 7",
+      "use": "Friction ratio and polygon geometry only; no Canadian site parameters or regime transferred."
+    }
+  ],
+  "accessed": "2026-09-08",
+  "formulae": [
+    "Sh0 = nu/(1-nu)*(Sv-alpha*Pp)+alpha*Pp",
+    "dSx = E_GPa*1000/(1-nu^2)*(epsilon_x+nu*epsilon_y)",
+    "dSy = E_GPa*1000/(1-nu^2)*(epsilon_y+nu*epsilon_x)",
+    "Q = (sqrt(1+fault_mu^2)+fault_mu)^2",
+    "max(Sv,SHmax)-Pp <= Q*(min(Sv,Shmin)-Pp)"
+  ],
+  "strain_convention": "compression positive, project selected 0 and +/-500 microstrain, no geographic axis",
+  "static_E_assumption": "Increment 10 analogue static E additionally treated as drained equivalent only for strain experiments; unvalidated transfer",
+  "fault_mu_assumption": "0.4, 0.6, 0.8 project experiment points; not calibrated or probability bounds; independent of intact-rock phi",
+  "fault_pressure_coefficient": 1.0,
+  "field_stress_eligible": false
+}

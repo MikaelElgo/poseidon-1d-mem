@@ -1,0 +1,309 @@
+# =============================================================================
+# config/overburden_stress.yml
+#
+# Poseidon 2 1D MEM - Increment 7.0.1
+# Human-authored density-QC screening policy, gap-conditioning policy, and
+# vertical overburden-stress assumption register.
+#
+# Tier C - Screening-Level / Uncalibrated Educational.
+#
+# WHY THIS FILE IS HUMAN-AUTHORED
+# -------------------------------
+# Every number below is a REVIEWABLE SCREENING CHOICE, not a measurement and
+# not a calibrated constant. A bulk-density plausibility band, a gap-bridging
+# threshold, a seawater density, and a shallow-column bracket are all
+# judgements about what this project is willing to accept for a screening-level
+# result. Putting them in a plain-text, diffable, version-controlled file means
+# an auditor can see and challenge each one without reading code, and means a
+# result can be recomputed under a different judgement without editing code.
+#
+# WHAT THIS FILE MAY NOT DO
+# -------------------------
+# * It may not name a lithology. No key or value here asserts that any
+#   interval is shale, sand, carbonate, or any other rock type, and no
+#   shallow-column bracket below is justified by an assumed rock type.
+# * It may not declare any bound, threshold, density, or scenario
+#   "calibrated". There is no measured shallow-density control, no checkshot-
+#   derived density, no core density, and no seawater measurement in this
+#   project.
+# * It may not repair a density log. There is no correction factor, no
+#   rescaling, no smoothing, no despiking, and no extrapolation policy here.
+#   An out-of-band or missing sample is MASKED, never modified.
+# * It may not hardcode a per-well verdict. Overburden method eligibility is
+#   DERIVED from measured coverage and QC results; no well name appears in
+#   this file.
+#
+# UNITS
+# -----
+# Density is kg/m^3 (SI) throughout. The locked Increment 2.1.1 curve
+# contracts already convert each file's recorded g/cm^3 RHOB column to
+# kg/m^3 via the exact p2mem.units.gcc_to_kgm3 factor, so no unit decision is
+# re-made here; this file only declares which canonical unit is ACCEPTED.
+# Vertical depth is metres. Stress is pascals internally and is reported in
+# both Pa and MPa. Gravity is m/s^2.
+# =============================================================================
+
+schema_version: "7.0.1"
+increment: 7
+assurance_tier: "Tier C - Screening-Level / Uncalibrated Educational"
+
+# -----------------------------------------------------------------------------
+# DENSITY SOURCE AND UNIT POLICY
+# -----------------------------------------------------------------------------
+density_source:
+
+  # The ONLY canonical curve name Increment 7 will integrate. A well whose
+  # locked curve contract does not resolve this exact canonical name has no
+  # density for this increment; that is a factual data gap, reported as
+  # 'rhob_not_available', never worked around by accepting a different curve.
+  canonical_curve_name: "RHOB_kg_m3"
+
+  # The ONLY canonical unit accepted. This is a CONFIRMATION check against the
+  # locked loader's own recorded canonical unit, not a conversion instruction:
+  # Increment 7 performs no unit conversion of its own. A curve arriving in
+  # any other canonical unit is rejected with a typed error rather than
+  # silently rescaled.
+  accepted_canonical_unit: "kg/m3"
+
+  # The conversion function the locked contract is expected to have applied.
+  # Recorded for provenance and confirmed per well; a mismatch is reported as
+  # a QC issue, never corrected here.
+  expected_conversion_function: "gcc_to_kgm3"
+
+  # Increment 7 never modifies the resolved RHOB array. Any conditioned
+  # representation lives in a separately named array and carries its own mask.
+  original_values_immutable: true
+
+# -----------------------------------------------------------------------------
+# SCREENING PLAUSIBILITY BAND
+# -----------------------------------------------------------------------------
+# These are SCREENING CRITERIA, not universal geological truth and not a
+# statement about what rock exists in these wells.
+#
+# Lower bound 1000 kg/m^3: approximately the density of fresh water. It is a
+# project screening threshold, not a universal physical floor. Interpreting it
+# as a lower physical reference is conditional on a fully liquid-saturated
+# porous medium; the project has no fluid-state measurement for every logged
+# interval. Values below it are therefore flagged for review, not declared
+# impossible geology.
+#
+# Upper bound 3500 kg/m^3: above the bulk density of any common sedimentary
+# mineral assemblage at any porosity. This is a project credibility limit
+# chosen to catch gross processing spikes, NOT a claim that a value just below
+# it is physically reasonable or lithologically meaningful.
+#
+# BOTH bounds are INCLUSIVE. A sample exactly equal to a bound passes. This is
+# stated explicitly because an inclusive/exclusive slip at a boundary is a
+# silent scientific change, and it is tested at the exact boundary values.
+screening_bounds:
+  rhob_min_kg_m3: 1000.0
+  rhob_max_kg_m3: 3500.0
+  bounds_are_inclusive: true
+
+# -----------------------------------------------------------------------------
+# GAP-CONDITIONING POLICY
+# -----------------------------------------------------------------------------
+gap_conditioning:
+
+  # Short internal gaps MAY be bridged. Bridging is linear interpolation of
+  # density against TRUE VERTICAL DEPTH - the coordinate the stress integral
+  # is actually taken in - between the last and first bracketing eligible
+  # samples. It is never applied outside the bracketed interior of the
+  # measured column.
+  bridge_short_internal_gaps: true
+
+  # The approved threshold, expressed in TVD metres (NOT measured depth and
+  # NOT a sample count: a sample count would mean different things in
+  # different logging runs, and an MD threshold would mean different things in
+  # a deviated well).
+  #
+  # WHY 10 m. This is a transparent project heuristic, not a rigorous error
+  # bound. Endpoint contrast alone cannot bound the unknown density inside a
+  # missing interval without an additional assumption about its interior
+  # behaviour. The full 0/2/5/10/20/30 m sensitivity is therefore the evidence
+  # used to show the consequence of this choice. The conditioned contribution
+  # is exported separately, and any internal gap left unresolved truncates the
+  # integrable profile before the gap.
+  short_gap_max_tvd_m: 10.0
+
+  # Bridging is forbidden across the seabed, outside locked survey coverage,
+  # and across any gap exceeding the threshold. These are hard invariants, not
+  # tunable behaviour; they are declared here so the file states the policy
+  # completely rather than leaving it implicit in code.
+  bridge_across_seabed_allowed: false
+  bridge_outside_survey_coverage_allowed: false
+  bridge_long_gaps_allowed: false
+
+  # The shallow seabed-to-first-valid-RHOB gap is NEVER treated as an internal
+  # gap and is never bridged by the rule above, at any threshold. It is an
+  # unmeasured column, not a dropout.
+  shallow_gap_uses_internal_gap_rule: false
+
+  # A shallow gap at or below this tolerance is treated as reaching the
+  # seabed. Set to one median sample increment's order of magnitude; it exists
+  # so that a log genuinely starting at the seabed is not failed by a
+  # sub-metre offset. It is NOT a licence to ignore a real unmeasured column.
+  shallow_gap_tolerance_tvd_m: 1.0
+
+  # Thresholds re-run for the mandatory gap-threshold sensitivity report. The
+  # approved threshold above must appear in this list.
+  sensitivity_thresholds_tvd_m: [0.0, 2.0, 5.0, 10.0, 20.0, 30.0]
+
+# -----------------------------------------------------------------------------
+# INTEGRATION POLICY
+# -----------------------------------------------------------------------------
+integration:
+
+  # sigma_v(z) = INTEGRAL rho(z) g dz, evaluated in TRUE VERTICAL DEPTH.
+  # Trapezoidal quadrature between consecutive eligible samples: exact for a
+  # piecewise-linear density profile, deterministic, and introducing no fitted
+  # parameter. Measured-depth integration is structurally impossible here -
+  # the integrator accepts a vertical-depth array and rejects a non-monotonic
+  # one.
+  method: "trapezoidal_in_true_vertical_depth"
+
+  # CGPM standard gravity, exact by definition. This is an ASSUMED constant:
+  # no local gravity survey exists for these wells. Any result stating an
+  # absolute stress carries this assumption.
+  gravity_m_s2: 9.80665
+
+  # Vertical-coordinate handling, declared rather than left to chance:
+  #  * a zero increment (repeated or equal vertical coordinate) contributes
+  #    exactly zero and is counted and reported;
+  #  * a negative increment is REJECTED with a typed error - it is either a
+  #    sorting defect or an attempt to integrate the wrong coordinate, and
+  #    silently sorting it away would hide both.
+  zero_increment_contribution: "exactly_zero_counted_and_reported"
+  negative_increment_policy: "reject_with_typed_error"
+
+  # Reported profile decimation. The integral itself uses EVERY eligible
+  # sample; this controls only how densely the cumulative profile is exported.
+  # Nodes are SELECTED existing samples, never interpolated values.
+  profile_report_step_tvdss_m: 10.0
+
+# -----------------------------------------------------------------------------
+# WATER COLUMN
+# -----------------------------------------------------------------------------
+water_column:
+
+  # ASSUMED seawater density. This project holds no measured seawater density,
+  # no salinity profile, and no temperature profile for these locations. This
+  # value is a configured screening assumption and must never be described as
+  # measured data.
+  seawater_density_kg_m3: 1025.0
+
+  # Bracket used for the seawater sensitivity rows. Chosen to span ordinary
+  # open-ocean seawater density; it is a bracket on an assumption, not an
+  # uncertainty derived from a measurement.
+  seawater_density_low_kg_m3: 1020.0
+  seawater_density_high_kg_m3: 1030.0
+
+  # The water column is integrated from the sea surface (TVDSS = 0) to the
+  # seabed marker's TVDSS, taken from the LOCKED Increment 5 survey-corrected
+  # marker table. A well with no approved formation-top file has no seabed
+  # marker and therefore no determinable water column; it is reported as
+  # unresolved, never assumed to be zero and never borrowed from another well.
+  seabed_source: "locked_increment5_survey_corrected_marker_table"
+  seabed_marker_name: "Sea Bed"
+  cross_well_seabed_transfer_allowed: false
+
+# -----------------------------------------------------------------------------
+# UNRESOLVED SHALLOW-COLUMN SCREENING SCENARIOS
+# -----------------------------------------------------------------------------
+# READ THIS BEFORE READING ANY NUMBER DERIVED FROM IT.
+#
+# Where the density log begins far below the seabed, the interval between the
+# seabed and the first eligible density sample is UNMEASURED. No absolute
+# vertical stress can be stated as measured truth for such a well.
+#
+# The scenarios below exist ONLY to quantify the magnitude of that ignorance.
+# They are a transparent bracket, published low/base/high, never collapsed to
+# a single number, and never presented as an estimate of the true stress.
+#
+# HOW THE BRACKET IS JUSTIFIED, WITHOUT A LITHOLOGY AND WITHOUT A TREND
+# --------------------------------------------------------------------
+# low  : the configured seawater density. This is a conditional low scenario
+#        only if the unknown column is fully saturated. The project does not
+#        establish its fluid state, so this is not asserted as a physical
+#        floor.
+# high : the low tail (a configured percentile) of the SAME WELL'S OWN
+#        measured eligible density population. The unresolved column lies
+#        entirely ABOVE the measured column, which motivates an illustrative
+#        monotonic-compaction scenario. Without lithology, fluid-state,
+#        overpressure or shallow-density control, the measured P05 is not a
+#        physical ceiling and the spread is not a rigorous uncertainty bound.
+#        No depth-dependent density function is constructed anywhere.
+# base : the arithmetic midpoint of low and high. It has NO evidentiary
+#        support whatsoever. It exists so that the bracket has a labelled
+#        centre for plotting, and it must never be selected as a result.
+#
+# The sensitivity spread is deliberately wide. It demonstrates dependence on
+# the assumed shallow density; it is not a calibrated confidence interval.
+shallow_column_scenarios:
+  enabled: true
+  low_basis: "configured_seawater_density_conditional_low_scenario"
+  high_basis: "own_well_measured_p05_illustrative_upper_scenario"
+  high_percentile: 5.0
+  base_basis: "arithmetic_midpoint_of_low_and_high_no_evidentiary_support"
+  base_is_not_a_best_estimate: true
+  scenario_names: ["low", "base", "high"]
+
+  # A scenario result may never be published without its assumed-fraction
+  # disclosure (what proportion of the reported total originates in the
+  # unmeasured column). Enforced in code; declared here so the policy is
+  # visible in the reviewable file.
+  require_assumed_fraction_disclosure: true
+
+# -----------------------------------------------------------------------------
+# METHOD-ELIGIBILITY DERIVATION
+# -----------------------------------------------------------------------------
+# The status codes and the ORDER in which limiting reasons are evaluated. The
+# status is DERIVED from measured coverage and QC results for each well; no
+# well name appears anywhere in this file.
+eligibility:
+  statuses:
+    - "absolute_overburden_supported"
+    - "screening_sensitivity_only"
+    - "partial_measured_increment_only"
+    - "not_eligible"
+
+  # absolute_overburden_supported additionally requires that no unresolved
+  # internal gap of any class interrupts the column between the seabed and the
+  # evaluation depth. A short gap is still unresolved when bridging is
+  # disabled or a bridge precondition fails; it may never be integrated
+  # across merely because it is short.
+  absolute_requires_uninterrupted_column: true
+
+  # Minimum number of eligible samples before any measured increment is
+  # reported at all. Two samples is the arithmetic minimum for one trapezoid;
+  # this is deliberately not a coverage-quality threshold in disguise.
+  min_eligible_samples_for_increment: 2
+
+# -----------------------------------------------------------------------------
+# EXPLICITLY NOT IMPLEMENTED IN INCREMENT 7
+# -----------------------------------------------------------------------------
+# Declared so that the absence of each is a recorded decision rather than an
+# omission, and so that a future reader cannot mistake this framework for a
+# pore-pressure or stress-modelling deliverable.
+not_implemented:
+  - "pore_pressure_prediction"
+  - "sonic_normal_compaction_trend_fitting"
+  - "resistivity_normal_compaction_trend_fitting"
+  - "eaton_method"
+  - "bowers_method"
+  - "equivalent_depth_method"
+  - "drilling_exponent_method"
+  - "effective_stress_calculation"
+  - "dynamic_elastic_property_modelling"
+  - "static_elastic_property_modelling"
+  - "rock_strength_modelling"
+  - "horizontal_stress_calculation"
+  - "stress_calibration"
+  - "mud_window_calculation"
+  - "breakout_analysis"
+  - "tensile_fracture_analysis"
+  - "wellbore_stability_analysis"
+  - "named_lithology_assignment"
+  - "mineralogical_interpretation"
+  - "shallow_density_reconstruction_from_a_fitted_trend"
+  - "density_extrapolation_beyond_measured_coverage"

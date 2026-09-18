@@ -1,0 +1,226 @@
+# config/deviation_survey_contracts.yml
+#
+# Increment 3 human-authored, human-reviewable per-file deviation-survey
+# contract for each of the four approved Petrel well-trace files
+# (Poseidon 2, Boreas 1, Poseidon North 1, Proteus 1ST2). Built by directly
+# inspecting each file's actual header block and station data - every
+# `expected_*` value below was independently read from the file itself
+# (never assumed, never copied from a prior increment's prose), and is
+# re-verified against the file's ACTUAL parsed header/data by
+# `p2mem.io.deviation.resolve_deviation_contract` at load time. A mismatch
+# in any `expected_*` field is a blocking ERROR - ingestion does not
+# silently proceed with "close enough" values.
+#
+# Increment 3.1 correction: the four top-level filename keys below are the
+# EXACT, literal source filenames, which contain spaces (e.g.
+# "Poseidon 2_dev.txt", not "Poseidon_2_dev.txt"). Increment 3 originally
+# keyed this file with underscores substituted for spaces, which an audit
+# found would fail to resolve against the actual files as they exist in
+# Google Drive (contract lookup is an exact filename match - see
+# `p2mem.io.deviation.load_deviation_surveys`). Internal WELL KEYS (used
+# everywhere else in this project - notebook DEV_FILES dict values,
+# output row well_key columns, Python dict keys) remain underscored
+# (Poseidon_2, Boreas_1, Poseidon_North_1, Proteus_1ST2) for Python-
+# identifier friendliness; only the FILENAME strings below carry the
+# literal, space-containing names.
+#
+# Tolerance rationale (identical across all four wells, not tuned per
+# well): `header_tolerance_m` (1 mm) allows for floating-point round-trip
+# noise in a re-typed/re-exported header value without masking a
+# genuinely different wellhead/datum. `residual_tolerance_tvd_m` and
+# `residual_tolerance_horizontal_m` (1 cm each) are the PASS threshold for
+# the independent minimum-curvature-vs-Petrel-source trajectory
+# comparison - generous enough that ordinary floating-point/interpolation
+# noise (observed at ~1 mm or better for three of the four wells) passes
+# cleanly, but tight enough that a real discrepancy (observed at ~0.19 m
+# TVD / ~1.6 m horizontal for Proteus 1ST2) is flagged. `residual_fail_
+# threshold_m` (5 m) is an outer bound: a residual beyond this would
+# suggest a parsing/contract error (wrong file, wrong wellhead, corrupted
+# station data) rather than a legitimate trajectory-reconstruction
+# discrepancy, and is reported as FAIL rather than WARNING. These three
+# values are deliberately identical for every well in this file - they
+# were chosen once, from first principles, and are not re-tuned per well
+# to force a particular pass/fail outcome for any specific file.
+#
+# `depth_basis_policy: petrel_source_trace` is set uniformly for all four
+# wells. Given the unresolved Proteus 1ST2 trajectory discrepancy (see the
+# Increment 3 manifest), the conservative, auditable choice is to use the
+# Petrel-supplied source TVD as every well's downstream MD-to-TVD/TVDSS
+# mapping basis, while retaining the independently computed minimum-
+# curvature trajectory as an always-reported QC comparison. This is not
+# cherry-picked per well (e.g. using minimum-curvature for the three
+# wells that agree closely and source-trace only for Proteus) - the same
+# policy value is declared for every well, so the choice is visible and
+# uniform rather than silently tuned to make the output look better.
+files:
+  "Poseidon 2_dev.txt":
+    expected_sha256: "862e3d765edb8ecda6a4ea45ac1cdf82b1588fa2999c49368dd24fd1953fafdf"
+    expected_well_identifier: "Poseidon 2"
+    expected_survey_identifier: "Explicit survey 1"
+    expected_coordinate_reference_system: 'GDA94 / MGA Zone 51 ("") [null,null]'
+    expected_wellhead_x_m: 421661.80000001
+    expected_wellhead_y_m: 8488800.70000000
+    expected_datum_m: 21.79999924
+    expected_datum_reference: "RT, Rotary table, from MSL"
+    expected_column_count: 11
+    expected_column_order: [MD, X, Y, Z, TVD, DX, DY, AZIM_TN, INCL, DLS, AZIM_GN]
+    expected_units:
+      MD: m
+      X: m
+      Y: m
+      Z: m
+      TVD: m
+      DX: m
+      DY: m
+      AZIM_TN: deg
+      INCL: deg
+      DLS: deg_per_30m
+      AZIM_GN: deg
+    expected_station_count: 124
+    expected_md_min_m: 0.0
+    expected_md_max_m: 5356.0
+    azimuth_reference_for_grid_coordinates: AZIM_GN
+    source_depth_convention: "MD and TVD referenced to zero (=0) at well datum (rotary table), increasing downward"
+    header_tolerance_m: 0.001
+    residual_tolerance_tvd_m: 0.01
+    residual_tolerance_horizontal_m: 0.01
+    residual_fail_threshold_m: 5.0
+    depth_basis_policy: petrel_source_trace
+    notes: >
+      GAS well type. Independent minimum-curvature reconstruction is
+      expected to agree with the Petrel-supplied TVD/DX/DY to
+      approximately millimetre scale (see Increment 3 manifest Section 5
+      for the actual re-verified residuals). No known trajectory anomaly.
+
+  "Boreas 1_dev.txt":
+    expected_sha256: "8dec7c18b39d5aa9b4dfc608c8a165ce6e066a85112e38905eaeb241c1932c64"
+    expected_well_identifier: "Boreas 1"
+    expected_survey_identifier: "Explicit survey 1"
+    expected_coordinate_reference_system: 'GDA94 / MGA Zone 51 ("") [null,null]'
+    expected_wellhead_x_m: 424077.27700000
+    expected_wellhead_y_m: 8490107.52400000
+    expected_datum_m: 21.79999924
+    expected_datum_reference: "RT, Rotary table, from MSL"
+    expected_column_count: 11
+    expected_column_order: [MD, X, Y, Z, TVD, DX, DY, AZIM_TN, INCL, DLS, AZIM_GN]
+    expected_units:
+      MD: m
+      X: m
+      Y: m
+      Z: m
+      TVD: m
+      DX: m
+      DY: m
+      AZIM_TN: deg
+      INCL: deg
+      DLS: deg_per_30m
+      AZIM_GN: deg
+    expected_station_count: 134
+    expected_md_min_m: 0.0
+    expected_md_max_m: 5210.0
+    azimuth_reference_for_grid_coordinates: AZIM_GN
+    source_depth_convention: "MD and TVD referenced to zero (=0) at well datum (rotary table), increasing downward"
+    header_tolerance_m: 0.001
+    residual_tolerance_tvd_m: 0.01
+    residual_tolerance_horizontal_m: 0.01
+    residual_fail_threshold_m: 5.0
+    depth_basis_policy: petrel_source_trace
+    notes: >
+      GAS well type. This well's build section reaches the dataset's
+      second-highest maximum inclination (~9.56 deg). Independent
+      minimum-curvature reconstruction is expected to agree with the
+      Petrel-supplied TVD/DX/DY to approximately millimetre scale (see
+      Increment 3 manifest Section 5). No known trajectory anomaly.
+
+  "Poseidon North 1_dev.txt":
+    expected_sha256: "f8bea90b59bcfe72fd5e6d22d5a27b6fc2fe622c6b2df877065c206bb04c84e1"
+    expected_well_identifier: "Poseidon North 1"
+    expected_survey_identifier: "Explicit survey 1"
+    expected_coordinate_reference_system: 'GDA94 / MGA Zone 51 ("") [null,null]'
+    expected_wellhead_x_m: 428611.91000000
+    expected_wellhead_y_m: 8499338.27000000
+    expected_datum_m: 22.00000000
+    expected_datum_reference: "RT, Rotary table, from MSL"
+    expected_column_count: 11
+    expected_column_order: [MD, X, Y, Z, TVD, DX, DY, AZIM_TN, INCL, DLS, AZIM_GN]
+    expected_units:
+      MD: m
+      X: m
+      Y: m
+      Z: m
+      TVD: m
+      DX: m
+      DY: m
+      AZIM_TN: deg
+      INCL: deg
+      DLS: deg_per_30m
+      AZIM_GN: deg
+    expected_station_count: 147
+    expected_md_min_m: 0.0
+    expected_md_max_m: 5287.5180664
+    azimuth_reference_for_grid_coordinates: AZIM_GN
+    source_depth_convention: "MD and TVD referenced to zero (=0) at well datum (rotary table), increasing downward"
+    header_tolerance_m: 0.001
+    residual_tolerance_tvd_m: 0.01
+    residual_tolerance_horizontal_m: 0.01
+    residual_fail_threshold_m: 5.0
+    depth_basis_policy: petrel_source_trace
+    notes: >
+      WELL TYPE is declared UNDEFINED in this file's own header (not
+      GAS, unlike the other three wells) - preserved and reported as-is,
+      never silently assumed to be GAS. Its datum (22.0 m) differs
+      slightly from the other three wells' shared datum (21.79999924 m);
+      both are used exactly as declared, never rounded to match. No known
+      trajectory anomaly; independent minimum-curvature reconstruction is
+      expected to agree with the Petrel-supplied TVD/DX/DY to
+      approximately millimetre scale (see Increment 3 manifest Section 5).
+
+  "Proteus 1ST2_dev.txt":
+    expected_sha256: "16c656b14067b8df1af084332547e1bc1f6f0316e0bb438c4b56e00f7ebcd23e"
+    expected_well_identifier: "Proteus 1ST2"
+    expected_survey_identifier: "Explicit survey 1"
+    expected_coordinate_reference_system: 'GDA94 / MGA Zone 51 ("") [null,null]'
+    expected_wellhead_x_m: 428152.83000000
+    expected_wellhead_y_m: 8481148.02000000
+    expected_datum_m: 21.79999924
+    expected_datum_reference: "RT, Rotary table, from MSL"
+    expected_column_count: 11
+    expected_column_order: [MD, X, Y, Z, TVD, DX, DY, AZIM_TN, INCL, DLS, AZIM_GN]
+    expected_units:
+      MD: m
+      X: m
+      Y: m
+      Z: m
+      TVD: m
+      DX: m
+      DY: m
+      AZIM_TN: deg
+      INCL: deg
+      DLS: deg_per_30m
+      AZIM_GN: deg
+    expected_station_count: 155
+    expected_md_min_m: -0.000000763
+    expected_md_max_m: 5249.7102107
+    azimuth_reference_for_grid_coordinates: AZIM_GN
+    source_depth_convention: "MD and TVD referenced to zero (=0) at well datum (rotary table), increasing downward"
+    header_tolerance_m: 0.001
+    residual_tolerance_tvd_m: 0.01
+    residual_tolerance_horizontal_m: 0.01
+    residual_fail_threshold_m: 5.0
+    depth_basis_policy: petrel_source_trace
+    notes: >
+      KNOWN DATA-QUALITY FINDING (see Increment 3 manifest for full
+      discussion - not silently resolved or hidden here): this file's
+      first station carries a source MD/TVD of approximately -7.63e-7 m
+      (preserved exactly, never rounded to 0.0 or treated as an error).
+      Independent minimum-curvature reconstruction of this well's TVD/
+      easting/northing disagrees with the Petrel-supplied source trace by
+      substantially more than the other three wells (approximately 0.19 m
+      TVD, 1.6 m easting, 0.9 m northing at maximum, versus millimetre-
+      scale for the other three wells), even though this well's own
+      supplied DLS column is internally consistent with a degrees-per-
+      30-m recomputation from its own inclination/azimuth. This is
+      reported as a visible QC WARNING (not FAILED ingestion, and not a
+      "corrected" trajectory) - see `depth_basis_policy` above, which
+      uses the Petrel source trace (not the disagreeing minimum-curvature
+      trajectory) as this well's downstream depth-mapping basis.

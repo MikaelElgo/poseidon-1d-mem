@@ -1,0 +1,215 @@
+# config/formation_top_contracts.yml
+#
+# Increment 5 human-authored, human-reviewable per-file formation-top
+# contract for each of the FOUR approved formation-top files:
+#   - Poseidon_2_HRS_tops_no_wellname_MDRT.txt
+#   - Poseidon_2_selected_well_tops.txt
+#   - Boreas_1_HRS_tops_no_wellname_MDRT.txt
+#   - Boreas_1_selected_well_tops.txt
+#
+# Every expected_* field below was independently recomputed from the
+# actual four files (never assumed, never copied from prose) - see
+# INCREMENT_05_MANIFEST.md Section 1. A mismatch in any expected_* field
+# is a blocking ERROR at load time (p2mem.io.tops.resolve_hrs_top_contract /
+# resolve_readable_top_contract) - ingestion never silently proceeds with
+# "close enough" values.
+#
+# NOT APPROVED / MUST NOT BE USED (recorded here for traceability only -
+# no contract entry exists for these, and none is created for them):
+# Poseidon 1 tops, Kronos 1 tops, Torosa 1 tops, or any other well's tops.
+#
+# Poseidon North 1 and Proteus 1ST2 have NO approved formation-top file at
+# all. This is recorded as a factual data gap
+# (formation_top_availability: NOT_AVAILABLE - see
+# p2mem.top_models.FormationTopAvailabilityRecord and the Increment 5
+# integration script/notebook) - never as a missing/failed contract entry
+# here, and never filled by substituting another well's tops or
+# correlating them by depth alone.
+#
+# Well-identity evidence (Increment 5 vocabulary - see p2mem.top_models
+# and p2mem.io.tops module docstrings): NEITHER file representation is
+# ever described as content-verified identity for either well.
+#   - The two "HRS" files carry NO well name anywhere in the file body;
+#     association with the stated project well rests on the FILENAME
+#     alone (well_identity_source = "filename_only").
+#   - The two "selected readable" files DO name the well, but only in a
+#     leading '#' comment line - project-supplied metadata embedded in
+#     the file, not independently verified file content
+#     (well_identity_source = "in_file_comment_project_supplied").
+# Both are therefore declared well_identity_evidence_status:
+# "inferred_unverified" below (never "verified" - unlike, e.g., Increment
+# 4's Poseidon2-Checkshot.txt/Boreas1-Checkshot.txt, whose filenames were
+# judged unambiguous because there is only one candidate well of each of
+# those names in this project; the SAME reasoning is not extended here to
+# claim "verified", per this increment's more conservative, explicitly
+# audited evidence-classification decision - see INCREMENT_05_MANIFEST.md
+# Section 2 for the rationale).
+#
+# model_use_status (Increment 4 vocabulary, reused): both approved wells'
+# formation tops are declared "primary_model" - this increment's authority
+# mechanism is explicit HRS-versus-readable RECONCILIATION per well, not a
+# primary-vs-qc_only selection between competing wells (there is no
+# Increment-4-style "one well's curve becomes the project's primary
+# relationship" concept here), so there is no qc_only entry among the four
+# approved files.
+#
+# datum_depth_column_interpretation (identical across all four files -
+# independently confirmed against each approved well's own locked
+# Increment 3 deviation-survey file header, which states "MD AND TVD ARE
+# REFERENCED (=0) AT WELL DATUM [RT, Rotary Table] AND INCREASE
+# DOWNWARDS"): this file's MDRT_m/MDRT_M column is measured depth
+# referenced to zero at the rotary table, increasing downward - the IDENTICAL
+# convention as the locked deviation survey's own MD_source_m column for
+# the same well. No datum shift or unit conversion is required before
+# mapping MDRT through the locked survey trajectory (see
+# p2mem.depth_mapping.map_las_md_to_tvd_tvdss, reused unmodified).
+#
+# Numeric-range tolerance (0.005, identical across all four files): the
+# expected min/max values below were read directly from the source
+# file's own numeric text (2 decimal places); this tolerance absorbs
+# ordinary floating-point round-trip noise without masking a genuinely
+# different file.
+files:
+  "Poseidon_2_HRS_tops_no_wellname_MDRT.txt":
+    expected_sha256: "c907e81dc16bd72c209ffd9d1cc1e6e8837868e465d0fa627756e8c773737b9a"
+    project_well_key: "Poseidon_2"
+    representation_type: "HRS_MDRT_only"
+    well_identity_evidence_status: "inferred_unverified"
+    well_identity_evidence_notes: >
+      This file's body carries no well name at all (Top_Name/MDRT_m only);
+      association with Poseidon 2 rests on the filename alone
+      ("Poseidon_2_HRS_tops_no_wellname_MDRT.txt", whose own name states
+      it carries no well name in its body). Never described as content-
+      verified.
+    model_use_status: "primary_model"
+    expected_column_header_line: "Top_Name\tMDRT_m"
+    expected_column_order: ["Top_Name", "MDRT_m"]
+    expected_marker_count: 9
+    expected_mdrt_min_m: 518.40
+    expected_mdrt_max_m: 5356.00
+    numeric_range_tolerance: 0.005
+    datum_depth_column_interpretation: >
+      MDRT_m referenced to zero at rotary table, increasing downward -
+      identical convention to the locked Poseidon 2 deviation survey's own
+      MD_source_m column.
+    notes: >
+      9 markers (Sea Bed through TD). No "Nome Fm" pick exists for
+      Poseidon 2 in either approved source file - this is a genuine
+      absence of that specific pick for this well, not a reconciliation
+      defect (Boreas 1's marker set includes one).
+
+  "Poseidon_2_selected_well_tops.txt":
+    expected_sha256: "f4f057c44598efc7397029911521c10a0ec151f4b2387788b894bd99939c40a1"
+    project_well_key: "Poseidon_2"
+    representation_type: "selected_readable_MDRT_TVDSS"
+    well_identity_evidence_status: "inferred_unverified"
+    well_identity_evidence_notes: >
+      This file's leading '#' comment states "Selected readable well tops
+      for Poseidon 2" - project-supplied metadata embedded in the file,
+      not independently verified file content. Never described as
+      content-verified.
+    model_use_status: "primary_model"
+    expected_well_name_from_comment: "Poseidon 2"
+    expected_column_header_line: "TOP_NAME                                     \t    MDRT_M\t   TVDSS_M\tNOTE"
+    expected_column_order: ["TOP_NAME", "MDRT_M", "TVDSS_M", "NOTE"]
+    expected_marker_count: 9
+    expected_mdrt_min_m: 518.40
+    expected_mdrt_max_m: 5356.00
+    expected_tvdss_min_m: 496.60
+    expected_tvdss_max_m: 5334.20
+    numeric_range_tolerance: 0.005
+    datum_depth_column_interpretation: >
+      MDRT_M referenced to zero at rotary table, increasing downward -
+      identical convention to the locked Poseidon 2 deviation survey's own
+      MD_source_m column. TVDSS_M is this file's own SUPPLIED value,
+      preserved as TVDSS_source_m for residual/QC comparison only - it is
+      NOT this project's corrected depth (see p2mem.io.tops module
+      docstring).
+    notes: >
+      Confirmed regression finding (independently recomputed, never
+      hardcoded - see INCREMENT_05_MANIFEST.md Section 1): every one of
+      this file's 9 TVDSS_M values equals MDRT_M minus 21.8 m EXACTLY (the
+      well's own Kelly Bushing/RT elevation) - i.e. this file's TVDSS was
+      generated assuming a perfectly vertical well (TVD = MD from datum),
+      never accounting for the well's real, surveyed deviation. This is a
+      confirmed formation-top depth-reference defect, corrected in the
+      derived TVDSS_survey_corrected_m representation while this raw
+      TVDSS_source_m column itself is preserved unmodified.
+
+  "Boreas_1_HRS_tops_no_wellname_MDRT.txt":
+    expected_sha256: "5504dfe9fdeb3e2b8e024f17d59aba345974d432bdce89f9c8e5b8fd156cc9b4"
+    project_well_key: "Boreas_1"
+    representation_type: "HRS_MDRT_only"
+    well_identity_evidence_status: "inferred_unverified"
+    well_identity_evidence_notes: >
+      This file's body carries no well name at all (Top_Name/MDRT_m only);
+      association with Boreas 1 rests on the filename alone. Never
+      described as content-verified.
+    model_use_status: "primary_model"
+    expected_column_header_line: "Top_Name\tMDRT_m"
+    expected_column_order: ["Top_Name", "MDRT_m"]
+    expected_marker_count: 10
+    expected_mdrt_min_m: 513.70
+    expected_mdrt_max_m: 5210.00
+    numeric_range_tolerance: 0.005
+    datum_depth_column_interpretation: >
+      MDRT_m referenced to zero at rotary table, increasing downward -
+      identical convention to the locked Boreas 1 deviation survey's own
+      MD_source_m column.
+    notes: "10 markers (Sea Bed through TD), including Nome Fm."
+
+  "Boreas_1_selected_well_tops.txt":
+    expected_sha256: "bc677bc6a5b852de8e0e6deb1afd9ff7936870df95517e608cc6d771eed6327f"
+    project_well_key: "Boreas_1"
+    representation_type: "selected_readable_MDRT_TVDSS"
+    well_identity_evidence_status: "inferred_unverified"
+    well_identity_evidence_notes: >
+      This file's leading '#' comment states "Selected readable well tops
+      for Boreas 1" - project-supplied metadata embedded in the file, not
+      independently verified file content. Never described as content-
+      verified.
+    model_use_status: "primary_model"
+    expected_well_name_from_comment: "Boreas 1"
+    expected_column_header_line: "TOP_NAME                                     \t    MDRT_M\t   TVDSS_M\tNOTE"
+    expected_column_order: ["TOP_NAME", "MDRT_M", "TVDSS_M", "NOTE"]
+    expected_marker_count: 10
+    expected_mdrt_min_m: 513.70
+    expected_mdrt_max_m: 5210.00
+    expected_tvdss_min_m: 491.90
+    expected_tvdss_max_m: 5184.10
+    numeric_range_tolerance: 0.005
+    datum_depth_column_interpretation: >
+      MDRT_M referenced to zero at rotary table, increasing downward -
+      identical convention to the locked Boreas 1 deviation survey's own
+      MD_source_m column. TVDSS_M is this file's own SUPPLIED value,
+      preserved as TVDSS_source_m for residual/QC comparison only - it is
+      NOT this project's corrected depth.
+    notes: >
+      Confirmed regression finding (independently recomputed, never
+      hardcoded - see INCREMENT_05_MANIFEST.md Section 1): unlike
+      Poseidon 2, this file's TVDSS_M values do NOT equal MDRT_M minus
+      21.8 m (e.g. Prion Fm: 2206.90 - 21.8 = 2185.10, but the file states
+      2185.04) - they instead agree closely with the well's real, survey-
+      corrected TVDSS (max absolute residual 0.0416 m across all 10
+      markers, independently recomputed, below the approved Rev 1 design
+      tolerance of 0.05 m). This file was evidently generated from the
+      well's real, surveyed trajectory, not a vertical-well assumption.
+      This distinct, per-file evidence is why Boreas 1 is NOT "corrected"
+      merely because Poseidon 2 contains a defect - the two files' actual
+      generation methods differ, and the evidence is applied per well.
+
+# Human-authored marker-name alias contract (Increment 5 requirement:
+# "If normalization is needed, implement a human-authored alias contract
+# and preserve both original and canonical names... Do not use fuzzy
+# marker matching silently"). Empty for the current approved data: an
+# exhaustive comparison of all four files' marker names found every HRS
+# marker name IDENTICAL, byte-for-byte, to its corresponding readable-file
+# marker name (after only the readable file's own fixed-width space
+# padding is stripped by p2mem.io.tops.normalize_marker_name - never an
+# alias). No two markers currently require this table to be recognized as
+# the same canonical marker. It exists, and is exercised by
+# tests/test_tops.py's synthetic aliased-marker fixtures, so a genuinely
+# differently-spelled marker name in a FUTURE approved file can be
+# reconciled explicitly (by adding an entry here, reviewed by a human) -
+# never by silent fuzzy/similarity matching.
+marker_name_aliases: {}

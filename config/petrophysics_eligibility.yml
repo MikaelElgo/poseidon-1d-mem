@@ -1,0 +1,368 @@
+# =============================================================================
+# config/petrophysics_eligibility.yml
+#
+# Poseidon 2 1D MEM - Increment 6
+# Human-authored gamma-ray-family disposition, endpoint-sensitivity policy,
+# and method-eligibility rules.
+#
+# Tier C - Screening-Level / Uncalibrated Educational.
+#
+# WHY THIS FILE IS HUMAN-AUTHORED
+# -------------------------------
+# Every decision below is a REVIEWABLE JUDGEMENT, not a data-derived fact.
+# This project never adjudicates tool identity, curve equivalence, or well
+# usability from the numbers alone: a gamma-ray curve's fitness for a
+# screening-proxy calculation depends on acquisition metadata, tool type, hole
+# conditions, and calibration history that these files do not carry. Putting
+# those judgements in a plain-text, diffable, version-controlled file means an
+# auditor can see and challenge each one without reading code.
+#
+# WHAT THIS FILE MAY NOT DO
+# -------------------------
+# * It may not name a lithology. No key or value here asserts that any
+#   interval is shale, sand, carbonate, or any other rock type.
+# * It may not declare any endpoint, threshold, or scenario "calibrated".
+#   Every endpoint below is an ASSUMED, CONFIGURED value chosen to bracket
+#   uncertainty, and every result derived from it is a SCREENING PROXY.
+# * It may not rescale, correct, or repair a curve. There is no correction
+#   factor, no shift, and no normalization-to-a-reference-well anywhere in
+#   this file, by design (see Boreas 1 below).
+#
+# UNITS
+# -----
+# All gamma-ray endpoints and thresholds are in API units (gAPI) as recorded
+# in each file's own header and preserved by the LOCKED Increment 2.1.1
+# per-file curve contracts. Depth values are metres. IGR and the linear
+# screening proxy are dimensionless fractions in [0, 1] after clipping.
+# =============================================================================
+
+schema_version: "6.0"
+increment: 6
+assurance_tier: "Tier C - Screening-Level / Uncalibrated Educational"
+
+# -----------------------------------------------------------------------------
+# GLOBAL POLICY
+# -----------------------------------------------------------------------------
+policy:
+
+  # Endpoints are estimated per well, from that well's OWN valid GR-family
+  # samples, using percentile rules. A single universal cross-well endpoint
+  # pair is explicitly PROHIBITED: these are four different wells logged with
+  # four differently named tools, with no cross-well calibration tie, so a
+  # shared endpoint pair would silently assert an equivalence no evidence
+  # supports.
+  endpoint_estimation_method: "per_well_percentile_of_own_valid_samples"
+  cross_well_shared_endpoints_allowed: false
+
+  # Endpoints are estimated from samples that are BOTH finite AND
+  # depth-mapped. An unmapped sample has no defensible depth and must not
+  # influence a depth-resolved endpoint.
+  endpoint_sample_basis: "finite_and_depth_mapped_samples_only"
+
+  # The clipped IGR is what any downstream mask may consume; the unclipped
+  # IGR is always retained alongside it so that the amount of clipping - i.e.
+  # how far the real data fell outside the assumed endpoint bracket - stays
+  # visible and auditable rather than being silently absorbed.
+  clipping_policy: "retain_unclipped_and_clipped_side_by_side"
+  clip_lower: 0.0
+  clip_upper: 1.0
+
+  # Minimum separation between the low and high endpoint. Below this the
+  # normalization is numerically meaningless (a near-zero denominator turns
+  # ordinary log noise into full-scale IGR swings), so it is rejected with a
+  # typed error rather than producing an explosive result.
+  min_endpoint_separation_api: 1.0
+
+  # A linear IGR->proxy identity is the ONLY screening-proxy transform permitted
+  # in Increment 6. Larionov, Clavier, Stieber and every other nonlinear Vsh
+  # transform are DEFERRED: each would require retrieving and verifying its
+  # primary method source and closing a method-register entry before use, and
+  # none of that evidence exists in this project yet.
+  shale_proxy_transform: "linear_identity_of_clipped_igr"
+  nonlinear_vsh_transforms_enabled: false
+  nonlinear_vsh_deferral_reason: >-
+    No primary-source method record has been retrieved, verified, or closed for
+    any nonlinear Vsh transform in this project. A nonlinear transform would
+    change every downstream eligible thickness while adding no new measurement,
+    so it is deferred rather than assumed.
+
+  # Contiguity rules for interval analysis. `max_gap_samples` permits a short
+  # run of ineligible samples to be bridged INSIDE one reported block only
+  # when the physical depth span of that gap is also within
+  # `max_gap_depth_m`; both conditions must hold. This distinguishes
+  # sample-count continuity from physical-depth continuity - a 2-sample gap
+  # across a 400 m depth jump is not a continuous interval.
+  contiguity:
+    max_gap_samples: 2
+    max_gap_depth_m: 1.0
+    min_block_samples: 20
+    min_block_thickness_m: 5.0
+
+  # Sonic-NCT CANDIDATE screening thresholds. A sample is a candidate only if
+  # its clipped screening proxy is at or above the threshold. These are
+  # SENSITIVITY CASES, not a calibrated cut-off: the whole point of carrying
+  # three of them is to measure how much the candidate thickness moves.
+  nct_candidate_proxy_thresholds: [0.50, 0.60, 0.70]
+
+  # Physical plausibility bounds used by the eligibility masks. These reject
+  # implausible or out-of-policy values; they never repair them.
+  physical_bounds:
+    rhob_min_kg_m3: 1000.0
+    rhob_max_kg_m3: 3500.0
+    vp_min_m_s: 1000.0
+    vp_max_m_s: 8000.0
+    vs_min_m_s: 300.0
+    vs_max_m_s: 5000.0
+
+    # -------------------------------------------------------------------
+    # Vp/Vs bounds (Increment 6.1 correction)
+    # -------------------------------------------------------------------
+    # For an isotropic elastic solid with r = Vp/Vs:
+    #     nu = (r^2 - 2) / (2 * (r^2 - 1))
+    #     K  = rho * (Vp^2 - (4/3) * Vs^2)
+    #
+    # Increment 6 collapsed three DIFFERENT conditions into one bound
+    # labelled "non-physical". They are separated here, with names that
+    # state what each one actually is.
+    #
+    # CONFIGURED NON-NEGATIVE-POISSON-RATIO APPLICABILITY SCREEN.
+    # r = sqrt(2) gives nu = 0 EXACTLY, so a policy requiring a
+    # non-negative Poisson's ratio must ACCEPT r = sqrt(2). This bound is
+    # therefore INCLUSIVE (Increment 6 wrongly used an exclusive bound and
+    # rejected nu = 0). This is a conservative PROJECT POLICY choice about
+    # what to admit to a later dynamic-elastic calculation - it is not a
+    # claim that r < sqrt(2) is physically impossible.
+    vp_vs_ratio_nonnegative_poisson_min_inclusive: 1.4142135623730951
+
+    # POSITIVE-BULK-MODULUS BOUNDARY. K > 0 requires r > sqrt(4/3).
+    # r <= sqrt(4/3) implies a non-positive bulk modulus, which IS outside
+    # the isotropic elastic model - the one regime that genuinely warrants
+    # the word "non-physical" under that model. Samples between this bound
+    # and the screen bound above have a POSITIVE bulk modulus and a
+    # NEGATIVE Poisson's ratio: unusual, outside this project's policy,
+    # but not physically impossible, and diagnosed separately.
+    vp_vs_ratio_positive_bulk_modulus_min_exclusive: 1.1547005383792515
+
+    # CONFIGURED PLAUSIBILITY LIMIT - not a Poisson-domain boundary.
+    # At r = 4, nu ~= 0.467, an entirely ordinary Poisson's ratio. This
+    # bound expresses what this project is willing to treat as a credible
+    # logged ratio, nothing more.
+    vp_vs_ratio_plausibility_max: 4.0
+
+# -----------------------------------------------------------------------------
+# ENDPOINT SENSITIVITY SCENARIOS
+# -----------------------------------------------------------------------------
+# Three scenarios bracket the endpoint choice. Each is defined by a percentile
+# pair applied to a well's own valid, depth-mapped GR-family samples. NONE of
+# them is calibrated; "base" is a conventional mid-range choice, not a
+# preferred or validated one, and results must always be reported across all
+# three rather than from "base" alone.
+endpoint_scenarios:
+
+  - scenario_name: "low"
+    description: >-
+      Narrow bracket: a high low-endpoint and a low high-endpoint. This
+      compresses the normalization range, so more samples clip at both ends
+      and the proxy saturates sooner. Reported to show the upper bound of
+      apparent proxy magnitude.
+    low_percentile: 10.0
+    high_percentile: 85.0
+
+  - scenario_name: "base"
+    description: >-
+      Conventional mid-range bracket. Chosen for comparability with common
+      screening practice, NOT because any evidence in this project supports
+      it over the other two.
+    low_percentile: 5.0
+    high_percentile: 95.0
+
+  - scenario_name: "high"
+    description: >-
+      Wide bracket: a low low-endpoint and a high high-endpoint. This expands
+      the normalization range, so fewer samples clip and the proxy is damped.
+      Reported to show the lower bound of apparent proxy magnitude.
+    low_percentile: 1.0
+    high_percentile: 99.0
+
+# -----------------------------------------------------------------------------
+# PER-WELL GR-FAMILY DISPOSITION
+# -----------------------------------------------------------------------------
+# `use_status` vocabulary:
+#   screening_proxy_allowed            - a dimensionless screening proxy may be
+#                                        computed from this well's own GR-family
+#                                        curve, under its own per-well endpoints.
+#   screening_proxy_allowed_depth_tied - as above, but every result remains
+#                                        depth-tied and unvalidated because this
+#                                        well has no approved formation tops to
+#                                        anchor it stratigraphically.
+#   qc_only_excluded                   - the curve may appear in factual raw QC
+#                                        displays and availability reports ONLY.
+#                                        No GR index, no proxy, no flag, no
+#                                        lithology-dependent mask, no NCT-donor
+#                                        status may be computed for it.
+wells:
+
+  Poseidon_2:
+    source_las_filename: "Poseidon_2_logs.las"
+    gr_family_canonical_name: "GR_api"
+    gr_family_source_curve_name: "GR"
+    use_status: "screening_proxy_allowed"
+    exclusion_reason: null
+    evidence_class: "measured"
+    has_approved_formation_tops: true
+    notes: >-
+      The recorded values span a range and central tendency typical of
+      conventionally API-scaled gamma-ray logs. This is a statement about the
+      NUMERIC distribution and the scaling convention only; no depositional
+      setting, rock type, or lithology is asserted or implied. This well has
+      approved, survey-corrected Increment 5 formation tops, so its results can
+      be annotated against locked stratigraphic markers.
+
+  Poseidon_North_1:
+    source_las_filename: "Poseidon_North_1_logs.las"
+    gr_family_canonical_name: "GRD_api"
+    gr_family_source_curve_name: "GRD"
+    # Increment 6.1 correction: this well has no approved formation tops, so
+    # its machine-readable status must be the depth-tied variant. The previous
+    # value ("screening_proxy_allowed") contradicted both the config's own
+    # status vocabulary and the prose limitation, and is now rejected at
+    # config-load time by an explicit invariant.
+    use_status: "screening_proxy_allowed_depth_tied"
+    exclusion_reason: null
+    evidence_class: "measured"
+    has_approved_formation_tops: false
+    notes: >-
+      GRD is a differently named GR-family curve and is NEVER treated as
+      interchangeable with GR or ECGR. This well has NO approved formation
+      tops, so every result for it is depth-tied and stratigraphically
+      unvalidated, and any future use as an NCT donor would remain so. That
+      limitation is recorded here, in the machine-readable use_status, not
+      only in prose.
+
+  Proteus_1ST2:
+    source_las_filename: "Proteus_1ST2_logs.las"
+    gr_family_canonical_name: "GR_api"
+    gr_family_source_curve_name: "GR"
+    use_status: "screening_proxy_allowed_depth_tied"
+    exclusion_reason: null
+    evidence_class: "measured"
+    has_approved_formation_tops: false
+    notes: >-
+      This well's GR canonicalizes to the same name as Poseidon 2's (GR_api),
+      but it is a different tool run in a different well with no cross-well
+      calibration tie. Endpoints are estimated from this well's own samples
+      only. No approved formation tops exist, so results are explicitly
+      depth-tied and unvalidated.
+
+  Boreas_1:
+    source_las_filename: "Boreas_1_logs.las"
+    gr_family_canonical_name: "ECGR_api"
+    gr_family_source_curve_name: "ECGR"
+    use_status: "qc_only_excluded"
+    exclusion_reason: "BOREAS_ECGR_SCALE_UNRESOLVED"
+    evidence_class: "measured"
+    has_approved_formation_tops: true
+    notes: >-
+      FORMAL EXCLUSION from every lithology-dependent, GR-normalized,
+      screening-proxy (VSH_GR_linear_proxy_frac) and NCT-candidate
+      calculation. The ECGR curve carries an
+      unresolved scale/acquisition anomaly: its central tendency is roughly an
+      order of magnitude below what an API-scaled gamma-ray log over a
+      comparable section would show, its range extends across several hundred
+      API, it includes values at or below zero, and it contains samples above
+      the well's own declared seabed marker. No independent tool header,
+      calibration record, or environmental-correction metadata is available to
+      adjudicate the cause. The curve is therefore EXCLUDED, not corrected:
+      applying a shift, gain, or normalization would fabricate a calibration
+      that does not exist, and would silently propagate into every downstream
+      screening proxy and NCT candidate interval. Boreas 1 remains available for
+      factual raw-GR QC display and availability reporting only. The specific
+      numeric values supporting this disposition are MEASURED INDEPENDENTLY by
+      the integration run and reported there - they are deliberately not
+      hardcoded in this file.
+
+# -----------------------------------------------------------------------------
+# GR-PROXY DATA-CONFIDENCE CLASSIFICATION
+# -----------------------------------------------------------------------------
+# These classes describe CONFIDENCE IN THE DATA AND THE PROXY, never a rock
+# type. A high-confidence class means "this well's GR-family curve is well
+# covered, has usable dynamic range, and its proxy is stable across the three
+# endpoint scenarios" - it does NOT mean the interval is any named lithology.
+gr_proxy_confidence:
+  classes:
+    - "GR_PROXY_HIGH"
+    - "GR_PROXY_INTERMEDIATE"
+    - "GR_PROXY_LOW"
+    - "GR_NOT_AVAILABLE"
+    - "GR_EXCLUDED_UNRESOLVED_SCALE"
+  rules:
+    # A well is HIGH only if it clears every one of these; otherwise
+    # INTERMEDIATE if it clears the LOW bar; otherwise LOW.
+    high:
+      min_valid_fraction: 0.90
+      min_dynamic_range_api: 60.0
+      max_proxy_median_spread_across_scenarios: 0.10
+    intermediate:
+      min_valid_fraction: 0.70
+      min_dynamic_range_api: 40.0
+      max_proxy_median_spread_across_scenarios: 0.20
+
+# -----------------------------------------------------------------------------
+# METHOD-ELIGIBILITY MASK DEFINITIONS
+# -----------------------------------------------------------------------------
+# Each mask answers "is this sample technically ADMISSIBLE as input to a later
+# method?" - never "is this method valid here?" and never "is this
+# interpretation correct?". Eligibility is a necessary, not a sufficient,
+# condition, and no mask in this increment computes the method it gates.
+method_eligibility:
+
+  eligible_density_for_sv:
+    purpose: >-
+      Marks samples technically admissible as input to a LATER vertical-stress
+      (Sv) integration. Increment 6 neither fills missing density nor computes
+      Sv; a sample being eligible says nothing about whether an integration
+      over it would be defensible, since a density log that starts at ~470 m
+      TVDSS cannot by itself support an overburden integral from surface.
+    requires_finite_rhob: true
+    requires_rhob_within_physical_bounds: true
+    requires_mapped_depth: true
+    lithology_dependent: false
+    applies_to_excluded_gr_wells: true
+
+  eligible_dynamic_elastic:
+    purpose: >-
+      Marks samples technically admissible as input to a LATER dynamic-elastic
+      calculation. Increment 6 computes NO elastic property - no Young's
+      modulus, no Poisson ratio, no bulk or shear modulus. It only records
+      where the three required inputs coexist and pass the configured
+      non-negative-Poisson-ratio applicability screen. Excluded Vp/Vs values
+      are diagnosed BY REGIME (non-positive bulk modulus; positive bulk
+      modulus with negative Poisson ratio; above the configured plausibility
+      maximum) and are never aggregated under a single "non-physical" label.
+    requires_finite_positive_vp: true
+    requires_finite_positive_vs: true
+    requires_finite_rhob: true
+    requires_vp_greater_than_vs: true
+    # Increment 6.1: renamed from "requires_vp_vs_ratio_in_poisson_domain",
+    # which misdescribed a conservative PROJECT POLICY as a statement about
+    # the mathematical Poisson domain. See physical_bounds above.
+    requires_vp_vs_ratio_passes_nonnegative_poisson_screen: true
+    requires_mapped_depth: true
+    lithology_dependent: false
+    applies_to_excluded_gr_wells: true
+
+  eligible_sonic_nct_candidate:
+    purpose: >-
+      Marks samples that are CANDIDATE DATA for a LATER sonic normal-compaction
+      -trend analysis. This is a data-admissibility mask and nothing more. It
+      does NOT fit a trend, does NOT select a donor interval, does NOT claim
+      normal compaction, does NOT claim overpressure, and must never be read as
+      evidence that any interval is normally compacted or is any named
+      lithology.
+    requires_approved_gr_disposition: true
+    requires_finite_vp: true
+    requires_finite_gr_proxy: true
+    requires_mapped_depth: true
+    requires_proxy_at_or_above_threshold: true
+    lithology_dependent: true
+    applies_to_excluded_gr_wells: false

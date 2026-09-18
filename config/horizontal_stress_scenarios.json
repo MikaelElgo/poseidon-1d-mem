@@ -1,0 +1,119 @@
+{
+  "schema_version": "11.0.0",
+  "assurance": "conditional_uncalibrated",
+  "pressure_datum": "mean_sea_level_gauge_zero",
+  "fault_pressure_coefficient": 1.0,
+  "geographic_azimuth_deg": null,
+  "cases": [
+    {
+      "case_id": "reference",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "nu_020",
+      "mechanics_case": "nu_020",
+      "nu": 0.2,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "nu_030",
+      "mechanics_case": "nu_030",
+      "nu": 0.3,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "alpha_080",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 0.8,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "fluid_1020",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1020.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "fluid_1030",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1030.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "fault_mu_040",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.4,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "fault_mu_080",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.8,
+      "epsilon_x": 0.0,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "strain_x_0500",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0005,
+      "epsilon_y": 0.0
+    },
+    {
+      "case_id": "strain_equal_0500",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": 0.0005,
+      "epsilon_y": 0.0005
+    },
+    {
+      "case_id": "strain_x_minus0500",
+      "mechanics_case": "reference_experiment",
+      "nu": 0.25,
+      "alpha": 1.0,
+      "fluid_density_kg_m3": 1025.0,
+      "fault_mu": 0.6,
+      "epsilon_x": -0.0005,
+      "epsilon_y": 0.0
+    }
+  ]
+}

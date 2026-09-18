@@ -1,0 +1,207 @@
+# config/checkshot_contracts.yml
+#
+# Increment 4 human-authored, human-reviewable per-file checkshot (velocity
+# survey) contract for each of the three APPROVED checkshot files
+# (Poseidon2-Checkshot.txt, Boreas1-Checkshot.txt, Proteus1-Checkshot.txt -
+# note the exact, literal hyphenated filenames: this project's approved
+# Drive filenames, confirmed against the user-supplied SHA-256 values,
+# regardless of any different local/sandbox spelling a given execution
+# environment's uploaded copy may carry - see INCREMENT_04_MANIFEST.md,
+# "Filename-provenance discipline", which mirrors the identical Increment
+# 3.1 space-vs-underscore lesson).
+#
+# Every expected_* numeric field below was independently recomputed from
+# the actual three files (never assumed, never copied from prose) - see
+# INCREMENT_04_MANIFEST.md Section "Independently recomputed checkshot
+# statistics" for the exact recomputation. A mismatch in any expected_*
+# field is a blocking ERROR at load time (p2mem.io.checkshot.
+# resolve_checkshot_contract) - ingestion never silently proceeds with
+# "close enough" values.
+#
+# NOT APPROVED / MUST NOT BE USED (recorded here for traceability only -
+# no contract entry exists for these, and none is created for them):
+# Poseidon1-Checkshot.txt, Kronos1-Checkshot.txt, Pharos1-Checkshot.txt.
+#
+# Poseidon North 1 has NO approved checkshot file at all. This is recorded
+# as a factual data gap (checkshot_availability: NOT_AVAILABLE) elsewhere
+# (see p2mem.checkshot_models.CheckshotAvailabilityRecord and the
+# Increment 4 integration script/notebook) - never as a missing/failed
+# contract entry here, and never filled by substituting another well's
+# file.
+#
+# Well-identity evidence and model-use status (Increment 4 vocabulary -
+# see p2mem.checkshot_models module docstring):
+#   - Poseidon2-Checkshot.txt / Boreas1-Checkshot.txt: each filename
+#     unambiguously matches the sole candidate well of that name in this
+#     project (there is only one "Poseidon 2" and one "Boreas 1"); status
+#     "verified". Poseidon 2 is the ONLY checkshot approved to define a
+#     primary time-depth relationship (model_use_status: primary_model);
+#     Boreas 1 is supporting QC data only (model_use_status: qc_only) and
+#     must never be transferred into Poseidon 2 as a substitute time-depth
+#     model.
+#   - Proteus1-Checkshot.txt: the project's approved well is "Proteus
+#     1ST2" (a sidetrack), but this file's own name and content carry no
+#     "ST2"/sidetrack identifier and no embedded well name at all -
+#     association with Proteus 1ST2 rests on filename/project-context/
+#     depth-tie plausibility only, not independent proof; status
+#     "inferred_unverified", model_use_status: qc_only. Never described as
+#     verified anywhere downstream.
+#
+# Depth-basis interpretation (DEPTH_BASIS_NOT_EXPLICITLY_DECLARED):
+# every file's first column is labelled only "Depth" (never "MD"). It is
+# treated as a CANDIDATE measured-depth axis and evaluated empirically
+# against each well's own locked Increment 3/3.1.1 `petrel_source_trace`
+# survey MD->TVD relationship (see checkshot_depth_tie_qc.csv); it is
+# never silently renamed to MD_m or assumed correct without that check.
+#
+# Duplicate-tie / interpolation / extrapolation policy (identical across
+# all three files - see p2mem.time_depth module docstring for full
+# rationale): raw duplicate rows are always preserved exactly; the
+# conditioned representative for a tied Depth group is that group's
+# per-column MEDIAN (disclosed as equal to the arithmetic mean for every
+# group size 2, the only group size observed in this project); every tie
+# is individually registered in checkshot_duplicate_tie_register.csv.
+# Interpolation is piecewise-linear only (no spline). Extrapolation beyond
+# a file's own validated Depth coverage is disallowed everywhere (NaN,
+# never a fabricated value).
+#
+# Numeric-range tolerance (0.0001, identical across all three files): the
+# expected min/max values below were read directly from the source file's
+# own numeric text (4 decimal places for OWT, 1 for Depth/TVDSS); this
+# tolerance absorbs ordinary floating-point round-trip noise without
+# masking a genuinely different file.
+files:
+  "Poseidon2-Checkshot.txt":
+    expected_sha256: "69343c84a16180e6146241f3b02acc44b72b33faeff2a66333d518766cc8759d"
+    project_well_key: "Poseidon_2"
+    well_identity_evidence_status: "verified"
+    well_identity_evidence_notes: >
+      Filename unambiguously matches the sole "Poseidon 2" well in this
+      project; SHA-256 independently confirmed against the user-supplied
+      value. No embedded well identifier exists in the file's own content
+      (identical minimal header format across all three approved files),
+      but no naming/sidetrack ambiguity exists for this well either.
+    model_use_status: "primary_model"
+    expected_survey_statement: "VELOCITY SURVEY:(Schlumberger) OWT, vertically corrected, relative to SRD (MSL)"
+    expected_column_header_line: "Depth\tTVDSS\tOWT(sec)"
+    expected_column_order: [Depth, TVDSS, "OWT(sec)"]
+    expected_time_type: "OWT"
+    expected_time_unit: "s"
+    expected_vertical_correction_fragment: "vertically corrected"
+    expected_srd_reference_fragment: "relative to SRD (MSL)"
+    expected_row_count: 220
+    expected_depth_min_m: 1267.8
+    expected_depth_max_m: 4700.0
+    expected_tvdss_min_m: 1246.0
+    expected_tvdss_max_m: 4676.8
+    expected_owt_min_s: 0.6802
+    expected_owt_max_s: 1.5469
+    numeric_range_tolerance: 0.0001
+    depth_basis_interpretation_status: "candidate_md_evaluated_against_locked_survey"
+    duplicate_tie_policy: "raw_rows_preserved_median_representative_all_ties_registered"
+    interpolation_policy: "piecewise_linear_no_extrapolation"
+    extrapolation_policy: "disallowed_nan_outside_coverage"
+    notes: >
+      Only checkshot approved to define Poseidon 2's primary time-depth
+      relationship. Raw QC (independently recomputed, not assumed): 5
+      repeated Depth values (10 rows, all group size 2), 6 non-increasing
+      TVDSS steps, 4 non-increasing OWT steps, one 257.0 m acquisition gap
+      between Depth=1313.1 m and Depth=1570.1 m. Checkshot Depth coverage
+      (1267.8-4700.0 m) is a PARTIAL subset of this well's LAS MD interval
+      - LAS samples outside this range are never extrapolated (see
+      time_depth_mapping_summary.csv). Depth-vs-locked-survey comparison
+      recomputed max abs residual reported in checkshot_depth_tie_qc.csv
+      and INCREMENT_04_MANIFEST.md (not hardcoded here).
+
+  "Boreas1-Checkshot.txt":
+    expected_sha256: "dd7c03116277e3cbbe5bcbb31567127f352bc5d12b04d74a9c4a428a765bc44f"
+    project_well_key: "Boreas_1"
+    well_identity_evidence_status: "verified"
+    well_identity_evidence_notes: >
+      Filename unambiguously matches the sole "Boreas 1" well in this
+      project; SHA-256 independently confirmed against the user-supplied
+      value. No embedded well identifier exists in the file's own content
+      (identical minimal header format across all three approved files),
+      but no naming/sidetrack ambiguity exists for this well either.
+    model_use_status: "qc_only"
+    expected_survey_statement: "VELOCITY SURVEY:(Schlumberger) OWT, vertically corrected, relative to SRD (MSL)"
+    expected_column_header_line: "Depth\tTVDSS\tOWT(sec)"
+    expected_column_order: [Depth, TVDSS, "OWT(sec)"]
+    expected_time_type: "OWT"
+    expected_time_unit: "s"
+    expected_vertical_correction_fragment: "vertically corrected"
+    expected_srd_reference_fragment: "relative to SRD (MSL)"
+    expected_row_count: 212
+    expected_depth_min_m: 507.1
+    expected_depth_max_m: 5114.0
+    expected_tvdss_min_m: 486.0
+    expected_tvdss_max_m: 5089.8
+    expected_owt_min_s: 0.3201
+    expected_owt_max_s: 1.6466
+    numeric_range_tolerance: 0.0001
+    depth_basis_interpretation_status: "candidate_md_evaluated_against_locked_survey"
+    duplicate_tie_policy: "raw_rows_preserved_median_representative_all_ties_registered"
+    interpolation_policy: "piecewise_linear_no_extrapolation"
+    extrapolation_policy: "disallowed_nan_outside_coverage"
+    notes: >
+      NEWLY ADMITTED in Increment 4 as SUPPORTING QC DATA ONLY
+      (model_use_status: qc_only) - never transferred into Poseidon 2 as a
+      substitute time-depth model. Raw QC (independently recomputed, not
+      assumed): 3 repeated Depth values (6 rows, all group size 2), 4
+      non-increasing TVDSS steps (one of the four is a same-TVDSS,
+      distinct-Depth pair - see checkshot_duplicate_tie_register.csv and
+      INCREMENT_04_MANIFEST.md), OWT strictly increasing (0 non-increasing
+      steps). Depth-vs-locked-survey comparison shows a near-constant
+      offset pattern (recomputed value in checkshot_depth_tie_qc.csv) -
+      reported as an OBSERVED datum-like offset pattern, not a proven
+      datum error; both the checkshot-supplied TVDSS and the locked survey
+      TVDSS are preserved and reported side by side, neither silently
+      corrected to match the other.
+
+  "Proteus1-Checkshot.txt":
+    expected_sha256: "dd2eb37d38a9caea7630db80629a11ee9a8b07bd395c9be637f115d4e607e6f7"
+    project_well_key: "Proteus_1ST2"
+    well_identity_evidence_status: "inferred_unverified"
+    well_identity_evidence_notes: >
+      This project's approved well is "Proteus 1ST2" (a sidetrack), but
+      this file's own filename and content carry no "ST2"/sidetrack
+      identifier and no embedded well name of any kind. Association with
+      Proteus 1ST2 is inferred from filename, project/geographic context,
+      depth coverage, and numerical depth-tie plausibility against the
+      locked Proteus 1ST2 deviation survey ONLY - never independently
+      proven by file content, and never described as verified anywhere in
+      this project's outputs or notebook.
+    model_use_status: "qc_only"
+    expected_survey_statement: "VELOCITY SURVEY:(Schlumberger) OWT, vertically corrected, relative to SRD (MSL)"
+    expected_column_header_line: "Depth\tTVDSS\tOWT(sec)"
+    expected_column_order: [Depth, TVDSS, "OWT(sec)"]
+    expected_time_type: "OWT"
+    expected_time_unit: "s"
+    expected_vertical_correction_fragment: "vertically corrected"
+    expected_srd_reference_fragment: "relative to SRD (MSL)"
+    expected_row_count: 232
+    expected_depth_min_m: 479.6
+    expected_depth_max_m: 5238.9
+    expected_tvdss_min_m: 457.5
+    expected_tvdss_max_m: 5212.3
+    expected_owt_min_s: 0.3005
+    expected_owt_max_s: 1.6758
+    numeric_range_tolerance: 0.0001
+    depth_basis_interpretation_status: "candidate_md_evaluated_against_locked_survey"
+    duplicate_tie_policy: "raw_rows_preserved_median_representative_all_ties_registered"
+    interpolation_policy: "piecewise_linear_no_extrapolation"
+    extrapolation_policy: "disallowed_nan_outside_coverage"
+    notes: >
+      NEWLY ADMITTED in Increment 4 as SUPPORTING QC DATA ONLY
+      (model_use_status: qc_only), with UNVERIFIED well-identity evidence
+      (see well_identity_evidence_notes) - a visible, non-blocking warning
+      (WELL_IDENTITY_INFERRED_UNVERIFIED) is raised on every load. Raw QC
+      (independently recomputed, not assumed): strictly increasing in
+      Depth, TVDSS, and OWT throughout (0 repeated or non-increasing steps
+      in any column) - no duplicate-tie register entries for this file.
+      Depth-vs-locked-survey comparison shows a near-constant offset
+      pattern (recomputed value in checkshot_depth_tie_qc.csv) - reported
+      as an OBSERVED datum-like offset pattern, not a proven datum error;
+      both the checkshot-supplied TVDSS and the locked survey TVDSS are
+      preserved and reported side by side, neither silently corrected to
+      match the other.

@@ -1,0 +1,750 @@
+# config/las_curve_contracts.yml
+#
+# Per-file LAS curve contracts for the four approved Poseidon 2 MEM wells
+# (Increment 2, corrected in Increment 2.1). Every field below was read
+# directly from each file's actual ~Curve Information Section (see
+# INCREMENT_02_v2.1_MANIFEST.md, "How these contracts were built") -
+# nothing here was inferred, guessed, or copied from another well's
+# contract.
+#
+# WHY ONE CONTRACT PER FILE, NOT ONE SHARED CONTRACT:
+# The curve mnemonic field is empty for every curve except DEPT in all
+# four files; only the free-text description carries usable identity
+# (e.g. ": 1 DCAV" = ordinal 1, curve name DCAV). Column order is NOT
+# consistent across wells: Poseidon 2, Boreas 1, and Poseidon North 1 all
+# place their neutron-porosity curve last (ordinal 8), but Proteus 1ST2
+# places it at ordinal 5 - shifting RD, RHOB, and RS one position earlier
+# than in the other three files. A single shared contract keyed only by
+# ordinal would silently mislabel Proteus 1ST2's curves. Each file
+# therefore gets its own independent, fully-specified contract.
+#
+# RESOLUTION RULE (enforced in code, not just here): a curve is resolved
+# only when ITS ORDINAL, RAW UNIT, DESCRIPTION-EMBEDDED ORDINAL, and
+# DESCRIPTION-EMBEDDED NAME all agree with this contract (plus RAW
+# MNEMONIC, for the one curve - the measured-depth curve - that has one).
+# Ordinal position is never sufficient by itself. See
+# p2mem/io/las.py:resolve_curve_contract.
+#
+# INCREMENT 2.1 CORRECTIONS APPLIED TO THIS FILE (see INCREMENT_02_v2.1_MANIFEST.md
+# for the full audit and rationale):
+#
+# 1. NAMING: every curve now carries an explicit, unit-suffixed
+#    `raw_canonical_name` (the raw column's documented identity, e.g.
+#    "DTCO_us_per_ft") and `canonical_name` (the array key in
+#    `canonical_data`, e.g. "VP_m_s" for converted compressional
+#    velocity). A canonical name can no longer be mistaken for a
+#    different physical quantity or unit than the array it labels -
+#    "DTCO"/"DTSM" (slowness mnemonics) are never used to label a
+#    velocity array. GR, ECGR, and GRD remain three distinct canonical
+#    names (GR_api / ECGR_api / GRD_api) - never merged into one
+#    geological interpretation.
+# 2. DEPTH ROLE: exactly one curve per file now declares
+#    `semantic_role: measured_depth` explicitly. It is never located by
+#    searching for a canonical name spelled "DEPT" - this file renames
+#    that curve's canonical target to "MD_m", and code that inferred the
+#    role from the name "DEPT" would otherwise silently break.
+# 3. FILE IDENTITY: `expected_sha256`, `expected_las_version`,
+#    `expected_wrap`, and `expected_data_layout` are now declared and
+#    checked (blocking) against the actual file before any curve is
+#    resolved. `expected_null_value` is required (was optional and only
+#    a WARNING on mismatch in Increment 2; it is now required and a
+#    blocking ERROR on mismatch).
+#
+# CANONICAL NAMING POLICY: each well's own description-derived curve name
+# supplies the identity token used in its canonical name (e.g. Poseidon
+# 2's neutron porosity curve is canonicalized as "TNP_pct", Boreas 1's and
+# Poseidon North 1's as "TNPH_pct", per their own files) rather than
+# unifying physically similar curves across wells under one shared name.
+# Cross-well semantic unification is a petrophysical-interpretation
+# decision explicitly out of scope for LAS ingestion (Increment 2/2.1) and
+# is deferred to a later, explicitly-scoped increment.
+#
+# UNIT-CONVERSION POLICY: p2mem.units (Increment 1.1, unchanged/locked) is
+# used ONLY where it offers an exact, unit-only conversion function for
+# the quantity in question: us/ft -> m/s (DTCO, DTSM) and g/cc -> kg/m3
+# (RHOB). Measured depth is already in metres (identity - only its name
+# changes, DEPT -> MD). No conversion function exists in p2mem.units for
+# inches-to-metres, API gamma-ray units, ohm.m resistivity, or percent
+# neutron porosity as of Increment 1.1 - those curves are therefore left
+# in their original (raw = canonical) unit rather than inventing an ad hoc
+# conversion outside the tested, documented units module. Every
+# conversion_function declared below is validated at load time against a
+# controlled unit-signature registry (p2mem/io/las.py:_CONVERSION_UNIT_SIGNATURES)
+# so it cannot be paired with an incompatible unit.
+
+files:
+
+  Poseidon_2_logs.las:
+    expected_sha256: "4684864b2d4b37be1f132cc264d4672055865aa283b4fc7d7ef702f5d9a86828"
+    expected_well_identifier: "Poseidon 2"
+    expected_las_version: "2.0"
+    expected_wrap: "NO"
+    expected_null_value: -999.25
+    expected_curve_count: 9
+    expected_data_layout: "unwrapped_whitespace_delimited"
+    curves:
+      - ordinal: 0
+        semantic_role: measured_depth
+        source_curve_name: "DEPT"
+        raw_mnemonic: "DEPT"
+        raw_unit: "M"
+        raw_description: "0 Depth"
+        description_ordinal: 0
+        description_name: "Depth"
+        raw_canonical_name: "DEPT_m"
+        canonical_name: "MD_m"
+        canonical_unit: "m"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Measured depth index. Mnemonic is present (unlike every other
+          curve in this file) and unit is already SI metres; canonical
+          name renamed DEPT -> MD (identity conversion - no numeric
+          transform, only the array's name changes) per the Increment 2.1
+          explicit-measured-depth-role correction. Primary well.
+
+      - ordinal: 1
+        semantic_role: measurement
+        source_curve_name: "DCAV"
+        raw_mnemonic: ""
+        raw_unit: "in"
+        raw_description: "1 DCAV"
+        description_ordinal: 1
+        description_name: "DCAV"
+        raw_canonical_name: "DCAV_in"
+        canonical_name: "DCAV_in"
+        canonical_unit: "in"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Differential caliper. Raw mnemonic field is empty in source LAS;
+          identity resolved via ordinal + unit ("in") + description-ordinal
+          + description-name agreement, never via ordinal alone. No
+          inches-to-metres conversion function exists in p2mem.units as of
+          Increment 1.1 (only feet<->metres is implemented); retained in
+          original unit (identity). This curve is unique to Poseidon 2
+          among the four approved wells - the other three use HDAR
+          instead.
+
+      - ordinal: 2
+        semantic_role: measurement
+        source_curve_name: "DTCO"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "2 DTCO"
+        description_ordinal: 2
+        description_name: "DTCO"
+        raw_canonical_name: "DTCO_us_per_ft"
+        canonical_name: "VP_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: >
+          Compressional sonic transit time (slowness, us/ft), converted to
+          compressional velocity (VP, m/s) via the exact, definitional
+          p2mem.units.us_per_ft_to_m_per_s function (Increment 1.1). The
+          canonical array is named "VP_m_s", never "DTCO", because DTCO
+          conventionally means slowness in us/ft - using it to label a
+          velocity array would misidentify the physical quantity
+          (Increment 2.1 correction). The raw column remains separately
+          identifiable as DTCO_us_per_ft.
+
+      - ordinal: 3
+        semantic_role: measurement
+        source_curve_name: "DTSM"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "3 DTSM"
+        description_ordinal: 3
+        description_name: "DTSM"
+        raw_canonical_name: "DTSM_us_per_ft"
+        canonical_name: "VS_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: >
+          Shear sonic transit time (slowness, us/ft), converted to shear
+          velocity (VS, m/s) via the same exact conversion function as
+          DTCO/VP. Canonical name "VS_m_s", not "DTSM", for the same
+          reason as VP above.
+
+      - ordinal: 4
+        semantic_role: measurement
+        source_curve_name: "GR"
+        raw_mnemonic: ""
+        raw_unit: "API"
+        raw_description: "4 GR"
+        description_ordinal: 4
+        description_name: "GR"
+        raw_canonical_name: "GR_api"
+        canonical_name: "GR_api"
+        canonical_unit: "API"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Gamma ray. API gamma-ray units have no SI equivalent conversion
+          function in p2mem.units; retained as-is (identity). This is
+          Poseidon 2's primary GR curve, canonicalized "GR_api" - kept
+          distinct from Boreas 1's "ECGR_api" and Poseidon North 1's
+          "GRD_api" (never merged into one geological interpretation, per
+          the Increment 2.1 correction).
+
+      - ordinal: 5
+        semantic_role: measurement
+        source_curve_name: "RD"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "5 RD"
+        description_ordinal: 5
+        description_name: "RD"
+        raw_canonical_name: "RD_ohm_m"
+        canonical_name: "RD_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Deep resistivity. No SI/ohm.m conversion function exists in
+          p2mem.units; retained as-is (identity).
+
+      - ordinal: 6
+        semantic_role: measurement
+        source_curve_name: "RHOB"
+        raw_mnemonic: ""
+        raw_unit: "g/cc"
+        raw_description: "6 RHOB"
+        description_ordinal: 6
+        description_name: "RHOB"
+        raw_canonical_name: "RHOB_g_per_cm3"
+        canonical_name: "RHOB_kg_m3"
+        canonical_unit: "kg/m3"
+        required: true
+        conversion_function: "gcc_to_kgm3"
+        notes: >
+          Bulk density, converted via the exact p2mem.units.gcc_to_kgm3
+          function. Raw column (RHOB_g_per_cm3) preserved separately.
+          NOTE (carried forward from the Rev 1 design review, not
+          re-derived here): RHOB coverage in Poseidon 2 ends near 5296.85
+          m MD even though this file's depth extends to ~5350.95 m MD -
+          later increments must not assume RHOB is available across the
+          full logged interval.
+
+      - ordinal: 7
+        semantic_role: measurement
+        source_curve_name: "RS"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "7 RS"
+        description_ordinal: 7
+        description_name: "RS"
+        raw_canonical_name: "RS_ohm_m"
+        canonical_name: "RS_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Shallow resistivity. No conversion function available; retained
+          as-is (identity).
+
+      - ordinal: 8
+        semantic_role: measurement
+        source_curve_name: "TNP"
+        raw_mnemonic: ""
+        raw_unit: "%"
+        raw_description: "8 TNP"
+        description_ordinal: 8
+        description_name: "TNP"
+        raw_canonical_name: "TNP_pct"
+        canonical_name: "TNP_pct"
+        canonical_unit: "%"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Neutron porosity, as named in this file ("TNP"). No percent-to-
+          fraction conversion function exists in p2mem.units; retained in
+          original percent unit (identity). Kept as a distinct canonical
+          name from Boreas 1's/Poseidon North 1's "TNPH_pct" per the
+          project's cross-well-unification policy (see file header
+          comment above).
+
+  Boreas_1_logs.las:
+    expected_sha256: "b2fdf60cd9dfeb7843ffa211232d909e7e76b6122cb2fd84f212edc2371dd61f"
+    expected_well_identifier: "Boreas 1"
+    expected_las_version: "2.0"
+    expected_wrap: "NO"
+    expected_null_value: -999.25
+    expected_curve_count: 9
+    expected_data_layout: "unwrapped_whitespace_delimited"
+    curves:
+      - ordinal: 0
+        semantic_role: measured_depth
+        source_curve_name: "DEPT"
+        raw_mnemonic: "DEPT"
+        raw_unit: "M"
+        raw_description: "0 Depth"
+        description_ordinal: 0
+        description_name: "Depth"
+        raw_canonical_name: "DEPT_m"
+        canonical_name: "MD_m"
+        canonical_unit: "m"
+        required: true
+        conversion_function: "identity"
+        notes: "Measured depth index. Offset well."
+
+      - ordinal: 1
+        semantic_role: measurement
+        source_curve_name: "DTCO"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "1 DTCO"
+        description_ordinal: 1
+        description_name: "DTCO"
+        raw_canonical_name: "DTCO_us_per_ft"
+        canonical_name: "VP_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: "Compressional sonic transit time, converted to velocity VP_m_s (exact)."
+
+      - ordinal: 2
+        semantic_role: measurement
+        source_curve_name: "DTSM"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "2 DTSM"
+        description_ordinal: 2
+        description_name: "DTSM"
+        raw_canonical_name: "DTSM_us_per_ft"
+        canonical_name: "VS_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: "Shear sonic transit time, converted to velocity VS_m_s (exact)."
+
+      - ordinal: 3
+        semantic_role: measurement
+        source_curve_name: "ECGR"
+        raw_mnemonic: ""
+        raw_unit: "API"
+        raw_description: "3 ECGR"
+        description_ordinal: 3
+        description_name: "ECGR"
+        raw_canonical_name: "ECGR_api"
+        canonical_name: "ECGR_api"
+        canonical_unit: "API"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          KNOWN UNRESOLVED ISSUE (carried forward from the Rev 1 design
+          review, not re-derived or re-verified here): this curve has an
+          implausible median (~9.3 API) and range (~0 to ~519 API) versus
+          the other three wells' GR-family curves (~36-41 API median), and
+          samples appear above the declared seabed depth while RD/RS start
+          correctly below it. This module reports ECGR's ingested
+          statistics as plain facts (see CurveStats in the inventory
+          output) but does NOT rescale it, reinterpret its lithology
+          meaning, or otherwise act on the anomaly - that adjudication is
+          explicitly out of scope for LAS ingestion. Canonicalized
+          "ECGR_api", kept distinct from Poseidon 2's "GR_api" and
+          Poseidon North 1's "GRD_api" - never merged.
+
+      - ordinal: 4
+        semantic_role: measurement
+        source_curve_name: "HDAR"
+        raw_mnemonic: ""
+        raw_unit: "Inches"
+        raw_description: "4 HDAR"
+        description_ordinal: 4
+        description_name: "HDAR"
+        raw_canonical_name: "HDAR_in"
+        canonical_name: "HDAR_in"
+        canonical_unit: "Inches"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Caliper. Raw unit is spelled "Inches" in this file (vs Poseidon
+          2's "in" for its DCAV caliper curve) - both denote the same
+          physical unit; each is retained exactly as declared in its own
+          file rather than normalized to a shared spelling, consistent
+          with this project's per-file, non-fabricating contract policy.
+          No inches-to-metres conversion function exists in p2mem.units.
+
+      - ordinal: 5
+        semantic_role: measurement
+        source_curve_name: "RD"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "5 RD"
+        description_ordinal: 5
+        description_name: "RD"
+        raw_canonical_name: "RD_ohm_m"
+        canonical_name: "RD_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Deep resistivity. No conversion function available; retained as-is."
+
+      - ordinal: 6
+        semantic_role: measurement
+        source_curve_name: "RHOB"
+        raw_mnemonic: ""
+        raw_unit: "g/cc"
+        raw_description: "6 RHOB"
+        description_ordinal: 6
+        description_name: "RHOB"
+        raw_canonical_name: "RHOB_g_per_cm3"
+        canonical_name: "RHOB_kg_m3"
+        canonical_unit: "kg/m3"
+        required: true
+        conversion_function: "gcc_to_kgm3"
+        notes: "Bulk density, converted via p2mem.units.gcc_to_kgm3 (exact)."
+
+      - ordinal: 7
+        semantic_role: measurement
+        source_curve_name: "RS"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "7 RS"
+        description_ordinal: 7
+        description_name: "RS"
+        raw_canonical_name: "RS_ohm_m"
+        canonical_name: "RS_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Shallow resistivity. No conversion function available; retained as-is."
+
+      - ordinal: 8
+        semantic_role: measurement
+        source_curve_name: "TNPH"
+        raw_mnemonic: ""
+        raw_unit: "%"
+        raw_description: "8 TNPH"
+        description_ordinal: 8
+        description_name: "TNPH"
+        raw_canonical_name: "TNPH_pct"
+        canonical_name: "TNPH_pct"
+        canonical_unit: "%"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Neutron porosity, as named in this file ("TNPH"). Kept distinct
+          from Poseidon 2's "TNP_pct" per the cross-well-unification
+          policy.
+
+  Poseidon_North_1_logs.las:
+    expected_sha256: "ca3fe7b6547a72559127fab8c9540643600f4207efd067b84a08ad219354d78f"
+    expected_well_identifier: "Poseidon North 1"
+    expected_las_version: "2.0"
+    expected_wrap: "NO"
+    expected_null_value: -999.25
+    expected_curve_count: 9
+    expected_data_layout: "unwrapped_whitespace_delimited"
+    curves:
+      - ordinal: 0
+        semantic_role: measured_depth
+        source_curve_name: "DEPT"
+        raw_mnemonic: "DEPT"
+        raw_unit: "M"
+        raw_description: "0 Depth"
+        description_ordinal: 0
+        description_name: "Depth"
+        raw_canonical_name: "DEPT_m"
+        canonical_name: "MD_m"
+        canonical_unit: "m"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Measured depth index. Offset well. Formation tops for this well
+          have not been obtained as of this increment (open Rev 1 gating
+          item) - unaffected by LAS ingestion itself.
+
+      - ordinal: 1
+        semantic_role: measurement
+        source_curve_name: "DTCO"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "1 DTCO"
+        description_ordinal: 1
+        description_name: "DTCO"
+        raw_canonical_name: "DTCO_us_per_ft"
+        canonical_name: "VP_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: >
+          Compressional sonic transit time, converted to velocity VP_m_s
+          (exact). This well carries the Rev 1 design review's
+          provisional, transferred candidate normal-compaction-trend
+          interval - NOT validated, not re-assessed by this ingestion
+          increment.
+
+      - ordinal: 2
+        semantic_role: measurement
+        source_curve_name: "DTSM"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "2 DTSM"
+        description_ordinal: 2
+        description_name: "DTSM"
+        raw_canonical_name: "DTSM_us_per_ft"
+        canonical_name: "VS_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: "Shear sonic transit time, converted to velocity VS_m_s (exact)."
+
+      - ordinal: 3
+        semantic_role: measurement
+        source_curve_name: "GRD"
+        raw_mnemonic: ""
+        raw_unit: "API"
+        raw_description: "3 GRD"
+        description_ordinal: 3
+        description_name: "GRD"
+        raw_canonical_name: "GRD_api"
+        canonical_name: "GRD_api"
+        canonical_unit: "API"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Gamma ray, named "GRD" in this file's own description (distinct
+          identity from Poseidon 2's "GR" and Boreas 1's "ECGR");
+          canonicalized "GRD_api" - kept as its own canonical name, never
+          merged with either.
+
+      - ordinal: 4
+        semantic_role: measurement
+        source_curve_name: "HDAR"
+        raw_mnemonic: ""
+        raw_unit: "Inches"
+        raw_description: "4 HDAR"
+        description_ordinal: 4
+        description_name: "HDAR"
+        raw_canonical_name: "HDAR_in"
+        canonical_name: "HDAR_in"
+        canonical_unit: "Inches"
+        required: true
+        conversion_function: "identity"
+        notes: "Caliper. No inches-to-metres conversion function available; retained as-is."
+
+      - ordinal: 5
+        semantic_role: measurement
+        source_curve_name: "RD"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "5 RD"
+        description_ordinal: 5
+        description_name: "RD"
+        raw_canonical_name: "RD_ohm_m"
+        canonical_name: "RD_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Deep resistivity. No conversion function available; retained as-is."
+
+      - ordinal: 6
+        semantic_role: measurement
+        source_curve_name: "RHOB"
+        raw_mnemonic: ""
+        raw_unit: "g/cc"
+        raw_description: "6 RHOB"
+        description_ordinal: 6
+        description_name: "RHOB"
+        raw_canonical_name: "RHOB_g_per_cm3"
+        canonical_name: "RHOB_kg_m3"
+        canonical_unit: "kg/m3"
+        required: true
+        conversion_function: "gcc_to_kgm3"
+        notes: "Bulk density, converted via p2mem.units.gcc_to_kgm3 (exact)."
+
+      - ordinal: 7
+        semantic_role: measurement
+        source_curve_name: "RS"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "7 RS"
+        description_ordinal: 7
+        description_name: "RS"
+        raw_canonical_name: "RS_ohm_m"
+        canonical_name: "RS_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Shallow resistivity. No conversion function available; retained as-is."
+
+      - ordinal: 8
+        semantic_role: measurement
+        source_curve_name: "TNPH"
+        raw_mnemonic: ""
+        raw_unit: "%"
+        raw_description: "8 TNPH"
+        description_ordinal: 8
+        description_name: "TNPH"
+        raw_canonical_name: "TNPH_pct"
+        canonical_name: "TNPH_pct"
+        canonical_unit: "%"
+        required: true
+        conversion_function: "identity"
+        notes: "Neutron porosity, as named in this file (\"TNPH\")."
+
+  Proteus_1ST2_logs.las:
+    expected_sha256: "ffb100de5fdd5e0639eee71a59a2602aad19a386116d48b8110912e58939e92f"
+    expected_well_identifier: "Proteus 1ST2"
+    expected_las_version: "2.0"
+    expected_wrap: "NO"
+    expected_null_value: -999.25
+    expected_curve_count: 9
+    expected_data_layout: "unwrapped_whitespace_delimited"
+    curves:
+      - ordinal: 0
+        semantic_role: measured_depth
+        source_curve_name: "DEPT"
+        raw_mnemonic: "DEPT"
+        raw_unit: "M"
+        raw_description: "0 Depth"
+        description_ordinal: 0
+        description_name: "Depth"
+        raw_canonical_name: "DEPT_m"
+        canonical_name: "MD_m"
+        canonical_unit: "m"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Measured depth index. Offset well / sidetrack. The Rev 1 design
+          review flagged this well's DEVIATION SURVEY as a re-datumed
+          sidetrack requiring separate audit - that finding concerns the
+          deviation-survey file, not this LAS log file, and is unaffected
+          by (and not re-examined by) LAS ingestion.
+
+      - ordinal: 1
+        semantic_role: measurement
+        source_curve_name: "DTCO"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "1 DTCO"
+        description_ordinal: 1
+        description_name: "DTCO"
+        raw_canonical_name: "DTCO_us_per_ft"
+        canonical_name: "VP_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: "Compressional sonic transit time, converted to velocity VP_m_s (exact)."
+
+      - ordinal: 2
+        semantic_role: measurement
+        source_curve_name: "DTSM"
+        raw_mnemonic: ""
+        raw_unit: "us/ft"
+        raw_description: "2 DTSM"
+        description_ordinal: 2
+        description_name: "DTSM"
+        raw_canonical_name: "DTSM_us_per_ft"
+        canonical_name: "VS_m_s"
+        canonical_unit: "m/s"
+        required: true
+        conversion_function: "us_per_ft_to_m_per_s"
+        notes: "Shear sonic transit time, converted to velocity VS_m_s (exact)."
+
+      - ordinal: 3
+        semantic_role: measurement
+        source_curve_name: "GR"
+        raw_mnemonic: ""
+        raw_unit: "API"
+        raw_description: "3 GR"
+        description_ordinal: 3
+        description_name: "GR"
+        raw_canonical_name: "GR_api"
+        canonical_name: "GR_api"
+        canonical_unit: "API"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Gamma ray, named "GR" in this file (same name as Poseidon 2's GR
+          curve, but a SEPARATE canonical value per file - this contract
+          does not merge or cross-compare the two, even though both share
+          the canonical name "GR_api" independently within their own
+          file's namespace).
+
+      - ordinal: 4
+        semantic_role: measurement
+        source_curve_name: "HDAR"
+        raw_mnemonic: ""
+        raw_unit: "Inches"
+        raw_description: "4 HDAR"
+        description_ordinal: 4
+        description_name: "HDAR"
+        raw_canonical_name: "HDAR_in"
+        canonical_name: "HDAR_in"
+        canonical_unit: "Inches"
+        required: true
+        conversion_function: "identity"
+        notes: "Caliper. No inches-to-metres conversion function available; retained as-is."
+
+      - ordinal: 5
+        semantic_role: measurement
+        source_curve_name: "NPHI"
+        raw_mnemonic: ""
+        raw_unit: "%"
+        raw_description: "5 NPHI"
+        description_ordinal: 5
+        description_name: "NPHI"
+        raw_canonical_name: "NPHI_pct"
+        canonical_name: "NPHI_pct"
+        canonical_unit: "%"
+        required: true
+        conversion_function: "identity"
+        notes: >
+          Neutron porosity, named "NPHI" in this file. IMPORTANT COLUMN-
+          ORDER NOTE: unlike the other three approved wells (which place
+          their neutron-porosity curve last, at ordinal 8), Proteus 1ST2
+          places NPHI at ordinal 5 - shifting RD and RHOB one position
+          earlier than in the other files (and moving RS to the last
+          ordinal here). This is exactly the condition that makes a
+          single shared, order-based contract unsafe across wells; this
+          file's contract reflects its own actual column order only.
+
+      - ordinal: 6
+        semantic_role: measurement
+        source_curve_name: "RD"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "6 RD"
+        description_ordinal: 6
+        description_name: "RD"
+        raw_canonical_name: "RD_ohm_m"
+        canonical_name: "RD_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Deep resistivity. No conversion function available; retained as-is."
+
+      - ordinal: 7
+        semantic_role: measurement
+        source_curve_name: "RHOB"
+        raw_mnemonic: ""
+        raw_unit: "g/cc"
+        raw_description: "7 RHOB"
+        description_ordinal: 7
+        description_name: "RHOB"
+        raw_canonical_name: "RHOB_g_per_cm3"
+        canonical_name: "RHOB_kg_m3"
+        canonical_unit: "kg/m3"
+        required: true
+        conversion_function: "gcc_to_kgm3"
+        notes: "Bulk density, converted via p2mem.units.gcc_to_kgm3 (exact)."
+
+      - ordinal: 8
+        semantic_role: measurement
+        source_curve_name: "RS"
+        raw_mnemonic: ""
+        raw_unit: "ohmm"
+        raw_description: "8 RS"
+        description_ordinal: 8
+        description_name: "RS"
+        raw_canonical_name: "RS_ohm_m"
+        canonical_name: "RS_ohm_m"
+        canonical_unit: "ohmm"
+        required: true
+        conversion_function: "identity"
+        notes: "Shallow resistivity. No conversion function available; retained as-is."
