@@ -1,0 +1,9 @@
+# Selected readable well tops for Test Well 1
+# Source datum columns: MDRT = measured depth below rotary table; TVDSS = true vertical depth subsea
+# Synthetic test fixture - not a real project well
+
+TOP_NAME                                     	    MDRT_M	   TVDSS_M	NOTE
+--------------------------------------------------------------------------------------------------------------
+Marker A                                     	    100.00	     95.00	Top marker
+Marker B                                     	    205.00	    195.00	Middle marker, mismatched MDRT
+Marker C                                     	    300.00	    285.00	Bottom marker

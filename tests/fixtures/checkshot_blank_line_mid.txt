@@ -1,0 +1,5 @@
+VELOCITY SURVEY:(Schlumberger) OWT, vertically corrected, relative to SRD (MSL)
+Depth	TVDSS	OWT(sec)
+100.0	95.0	0.1000
+
+200.0	190.0	0.1900
